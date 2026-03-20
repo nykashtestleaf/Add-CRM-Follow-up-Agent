@@ -1247,7 +1247,7 @@ body {
 
     <!-- VERIFY BUTTON -->
     <button class="btn-save-key" id="btn-save-key" onclick="saveApiKey()" disabled>
-      <span id="save-key-inner">Verify &amp; Continue →</span>
+      <span id="save-key-inner">Save &amp; Continue →</span>
     </button>
 
     <!-- FOOTER NOTE -->
@@ -1390,41 +1390,22 @@ async function saveApiKey() {
 
   btn.disabled = true;
   inner.innerHTML = '<span class="spin"></span> Verifying…';
-  status.textContent = 'Contacting OpenRouter to verify key…';
+  status.textContent = 'Saving Groq key…';
   status.className = 'api-status checking';
 
-  try {
-    const res = await fetch('https://api.groq.com/openai/v1/models', {
-      headers: {
-        'Authorization': `Bearer ${val}`
-      }
-    });
-    if (res.ok) {
-      API_KEY = val;
-      sessionStorage.setItem('crm_api_key', val);
-      status.textContent = '✅ Key verified! Loading…';
-      status.className = 'api-status ok';
-      setTimeout(() => {
-        const gate = document.getElementById('api-gate');
-        gate.classList.add('hide');
-        setTimeout(() => gate.classList.add('hidden'), 350);
-        showToast('Groq API key verified and saved ✓', 'success');
-      }, 600);
-    } else {
-      status.textContent = res.status === 401
-        ? '❌ Invalid key — double-check and try again'
-        : `❌ OpenRouter returned error ${res.status}`;
-      status.className = 'api-status err';
-      document.getElementById('api-key-input').className = 'api-key-input invalid';
-      btn.disabled = false;
-      inner.textContent = 'Verify & Continue →';
-    }
-  } catch(e) {
-    status.textContent = '❌ Network error — check your connection';
-    status.className = 'api-status err';
-    btn.disabled = false;
-    inner.textContent = 'Verify & Continue →';
-  }
+  // Groq blocks browser CORS on /models endpoint
+  // Key is validated on format — real check happens on first generate call
+  await new Promise(r => setTimeout(r, 500));
+  API_KEY = val;
+  sessionStorage.setItem('crm_api_key', val);
+  status.textContent = '✅ Key saved! Click generate to start.';
+  status.className = 'api-status ok';
+  setTimeout(() => {
+    const gate = document.getElementById('api-gate');
+    gate.classList.add('hide');
+    setTimeout(() => gate.classList.add('hidden'), 350);
+    showToast('Groq API key saved ✓', 'success');
+  }, 600);
 }
 
 const STEPS = [
@@ -1537,6 +1518,72 @@ async function groqFetch(prompt, maxTokens = 2000) {
   const text = data.choices?.[0]?.message?.content || '';
   if (!text) throw new Error('Empty response from Anthropic');
   return text;
+}
+
+/* ══ JSON EXTRACTOR ══ */
+function extractJSON(raw) {
+  if (!raw) return null;
+  // Step 1: strip markdown fences
+  let cleaned = raw.replace(/```json/g, '').replace(/```/g, '').trim();
+  // Step 2: try direct parse
+  try { return JSON.parse(cleaned); } catch(_) {}
+  // Step 3: find first { to last }
+  const start = cleaned.indexOf('{');
+  const end   = cleaned.lastIndexOf('}');
+  if (start !== -1 && end !== -1 && end > start) {
+    try { return JSON.parse(cleaned.slice(start, end + 1)); } catch(_) {}
+  }
+  // Step 4: regex match
+  const match = cleaned.match(/\{[\s\S]*\}/);
+  if (match) { try { return JSON.parse(match[0]); } catch(_) {} }
+  return null;
+}
+
+function buildPrompt(crmText, callNote) {
+  return `You are a CRM expert and sales psychology specialist. Process the inputs below.
+
+=== CRM RAW DATA ===
+${crmText}
+
+=== CLOSED CALL NOTE ===
+${callNote || 'Not provided'}
+
+TASK 1 — DATA EXTRACTION
+Extract:
+name, company, designation, course, experience, ctc, intent, phone, email
+status:
+"not-picked" → no answer / unreachable
+"call-in-progress" → spoke / connected
+Default → "not-picked"
+
+TASK 2 — GENERATE 5 WHATSAPP FOLLOW-UPS
+
+BRANCHING:
+IF status = "not-picked":
+Curiosity → Relevance → Value → Awareness → Soft Close
+
+IF status = "call-in-progress":
+Trust → Alignment → Value → Reassurance → Close
+
+Message Flow (Brian Tracy):
+1. Build Trust
+2. Identify Needs
+3. Present Solution
+4. Handle Objection / Risk
+5. Close + Social Proof
+
+RULES:
+- English
+- 2–4 sentences each
+- No placeholders
+- Use name 2–3 times only
+- No repetition
+- Personalize using CRM + call note
+- Clear tone shift across messages
+
+CRITICAL: Your ENTIRE response must be ONLY the JSON object below — no introduction, no explanation, no "Based on", no text before or after. Start your response with { and end with }.
+
+{"lead":{"name":"","company":"","designation":"","course":"","experience":"","ctc":"","intent":"","phone":"","email":"","status":"not-picked"},"messages":["","","","",""]}`;
 }
 
 /* ══ PROCESS ══ */
@@ -2005,12 +2052,24 @@ function editCallNote() {
 }
 async function regenMessages() {
   closeEditDropdown();
-  const crmText  = lead.crmRaw || '';
+  if (!lead.name) return;
+  showToast('Regenerating messages…', '');
+  const crmText  = lead.crmRaw  || '';
   const callNote = lead.callNote || '';
-  document.getElementById('crm-text').value  = crmText;
-  document.getElementById('call-text').value = callNote;
-  sent = 0;
-  await processAll();
+  try {
+    const raw    = await groqFetch(buildPrompt(crmText, callNote), 2000);
+    const parsed = extractJSON(raw);
+    if (!parsed || !Array.isArray(parsed.messages) || parsed.messages.length < 5)
+      throw new Error('Could not parse response');
+    if (parsed.lead) lead = { ...lead, ...parsed.lead, callNote, crmRaw: crmText };
+    msgs = parsed.messages;
+    sent = 0;
+    saveLead();
+    renderPage();
+    showToast('Messages regenerated ✓', 'success');
+  } catch(e) {
+    showToast(e.message || 'Regeneration failed — try again', 'error');
+  }
 }
 
 /* ══ RESET ══ */
