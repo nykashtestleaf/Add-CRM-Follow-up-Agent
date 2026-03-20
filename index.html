@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Follow-up Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f5f6f8;
+  --s: #ffffff;
+  --s2: #f9fafb;
+  --s3: #f0f2f5;
+  --border: #e5e7eb;
+  --border2: #d1d5db;
+  --text: #111827;
+  --muted: #6b7280;
+  --muted2: #9ca3af;
+  --accent: #0ea5e9;
+  --wa: #25D366;
+  --wa-dark: #128C7E;
+  --bubble-bg: #dcf8c6;
+  --bubble-txt: #1a3320;
+  --wa-chat: #e5ddd5;
+  --r: 12px;
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow: 0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-lg: 0 16px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06);
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ─── TOPBAR ─── */
+.topbar {
+  background: var(--s);
+  border-bottom: 1px solid var(--border);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 300;
+  box-shadow: var(--shadow-sm);
+}
+.tb-left { display: flex; align-items: center; gap: 10px; }
+.tb-logo {
+  width: 32px; height: 32px;
+  background: var(--wa);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.tb-title { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -0.2px; }
+.tb-right { display: flex; align-items: center; gap: 8px; }
+
+/* Leads dropdown */
+.leads-select-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.leads-select {
+  appearance: none;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 32px 6px 12px;
+  font-size: 13px;
+  font-family: var(--font);
+  color: var(--text);
+  cursor: pointer;
+  outline: none;
+  max-width: 200px;
+  font-weight: 500;
+  transition: border-color 0.15s;
+}
+.leads-select:focus { border-color: var(--accent); }
+.leads-select-wrap::after {
+  content: '▾';
+  position: absolute;
+  right: 10px;
+  font-size: 11px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.btn-new {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 15px;
+  background: var(--wa);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: background 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+.btn-new:hover { background: #20c05e; }
+.btn-new:active { transform: scale(0.97); }
+
+/* ─── SHELL ─── */
+.shell {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px 16px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ─── EMPTY STATE ─── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 72px 20px;
+  text-align: center;
+  gap: 14px;
+}
+.empty-icon {
+  width: 68px; height: 68px;
+  background: var(--s);
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px;
+  box-shadow: var(--shadow-sm);
+}
+.empty-state h2 { font-size: 19px; font-weight: 600; color: var(--text); }
+.empty-state p  { font-size: 14px; color: var(--muted); max-width: 320px; }
+.empty-hint { font-size: 12px; color: var(--muted2); display: flex; align-items: center; gap: 5px; }
+
+/* ─── MODAL ─── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(17,24,39,0.45);
+  backdrop-filter: blur(3px);
+  z-index: 500;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s;
+}
+.overlay.open { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: var(--s);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  width: 100%;
+  max-width: 640px;
+  max-height: 88vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(16px) scale(0.98);
+  transition: transform 0.22s ease;
+}
+.overlay.open .modal { transform: translateY(0) scale(1); }
+
+.modal-head {
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.modal-head-left h3 { font-size: 16px; font-weight: 600; }
+.modal-head-left p  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.btn-close {
+  width: 28px; height: 28px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--s2);
+  color: var(--muted);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.btn-close:hover { background: var(--border); color: var(--text); }
+
+/* Modal tabs */
+.modal-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  padding: 0 4px;
+}
+.mtab {
+  padding: 10px 16px;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  background: none;
+  border-top: none; border-left: none; border-right: none;
+  font-family: var(--font);
+  transition: color 0.15s, border-color 0.15s;
+  display: flex; align-items: center; gap: 6px;
+}
+.mtab.on { color: var(--accent); border-bottom-color: var(--accent); }
+
+.modal-body {
+  padding: 18px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.field-label {
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.6px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.paste-box {
+  width: 100%;
+  min-height: 200px;
+  background: var(--s2);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-family: var(--mono);
+  color: var(--text);
+  resize: vertical;
+  outline: none;
+  line-height: 1.65;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.paste-box:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(14,165,233,0.1);
+}
+.paste-box::placeholder {
+  color: var(--muted2);
+  font-family: var(--font);
+  font-size: 13px;
+}
+.paste-box.err { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.1); }
+
+.modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.btn-go {
+  width: 100%;
+  padding: 12px;
+  background: var(--wa-dark);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: background 0.15s, transform 0.1s;
+}
+.btn-go:hover { background: #0f6b5f; }
+.btn-go:active { transform: scale(0.985); }
+.btn-go:disabled { background: #d1d5db; color: #9ca3af; cursor: not-allowed; transform: none; }
+
+/* ─── PROFILE CARD ─── */
+.profile-card {
+  background: var(--s);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.profile-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.avatar {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0ea5e9, #22c55e);
+  color: #fff;
+  font-weight: 700;
+  font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  letter-spacing: -1px;
+}
+.profile-name { font-size: 16px; font-weight: 600; }
+.profile-role { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* Status pill */
+.spill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 11px; border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+}
+.sp-np  { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+.sp-cip { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.sdot { width: 6px; height: 6px; border-radius: 50%; }
+.sdot-np  { background: #f97316; }
+.sdot-cip { background: #3b82f6; }
+
+/* Edit dropdown */
+.edit-wrap { position: relative; margin-left: auto; }
+.btn-edit {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 12px;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: 12px; font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--font);
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.btn-edit:hover { background: var(--s3); color: var(--text); }
+.edit-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--s);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  box-shadow: var(--shadow);
+  min-width: 160px;
+  z-index: 100;
+  overflow: hidden;
+  display: none;
+}
+.edit-dropdown.open { display: block; }
+.edd-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 14px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.12s;
+  border: none; background: none; width: 100%;
+  font-family: var(--font);
+  text-align: left;
+}
+.edd-item:hover { background: var(--s2); }
+.edd-item.danger { color: #ef4444; }
+.edd-item.danger:hover { background: #fef2f2; }
+.edd-sep { height: 1px; background: var(--border); margin: 3px 0; }
+
+/* Profile grid */
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 1px solid var(--border);
+}
+.pg {
+  padding: 12px 18px;
+  border-right: 1px solid var(--border);
+}
+.pg:nth-child(3n) { border-right: none; }
+.pg-l { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted2); margin-bottom: 4px; }
+.pg-v { font-size: 13px; font-weight: 500; color: var(--text); }
+.pg-v.na { color: var(--muted2); font-style: italic; font-weight: 400; }
+
+/* Intent row */
+.intent-row {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.intent-row .pg-l { margin-bottom: 5px; }
+.intent-row .pg-v { font-weight: 400; line-height: 1.6; }
+
+/* Call note — collapsible */
+.call-note-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.12s;
+}
+.call-note-bar:hover { background: var(--s2); }
+.call-note-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--wa-dark);
+}
+.cn-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.cn-chevron {
+  font-size: 11px;
+  color: var(--muted);
+  transition: transform 0.2s;
+}
+.cn-chevron.open { transform: rotate(180deg); }
+.call-note-body {
+  padding: 0 18px 14px;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.65;
+  display: none;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.call-note-body.open { display: block; }
+
+/* ─── FOLLOW-UP CARD ─── */
+.fu-card {
+  background: var(--s);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.fu-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.fu-title {
+  font-size: 13px;
+  font-weight: 600;
+  display: flex; align-items: center; gap: 7px;
+}
+.fu-sub { font-size: 11px; color: var(--muted); font-weight: 400; margin-left: 4px; }
+.prog-info {
+  display: flex; align-items: center; gap: 10px;
+}
+.prog-num { font-size: 12px; font-weight: 600; color: var(--muted); }
+.prog-track {
+  width: 80px; height: 4px;
+  background: var(--s3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.prog-fill { height: 100%; background: var(--wa); border-radius: 2px; transition: width 0.4s ease; }
+
+.step-list { display: flex; flex-direction: column; }
+
+/* STEP */
+.step {
+  border-bottom: 1px solid var(--border);
+  transition: opacity 0.25s;
+}
+.step:last-child { border-bottom: none; }
+.step.locked { opacity: 0.35; }
+.step.done { background: #fafffe; }
+.step.active { background: #f8fffc; }
+
+.step-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 16px;
+  background: var(--s2);
+  border-bottom: 1px solid var(--border);
+}
+.step.active .step-head { background: #f0fdf4; }
+.step.done .step-head { background: #f0fdf4; }
+
+.snum {
+  width: 28px; height: 28px;
+  border-radius: 7px;
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.n-l { background: var(--border); color: var(--muted); }
+.n-a { background: var(--wa); color: #fff; }
+.n-d { background: #dcfce7; color: #15803d; }
+
+.smeta { flex: 1; }
+.stitle { font-size: 13px; font-weight: 600; }
+.shint  { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+.psych-tag {
+  font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: 8px;
+  text-transform: uppercase; letter-spacing: 0.4px;
+  flex-shrink: 0;
+}
+.pt-liking  { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+.pt-consist { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.pt-value   { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+.pt-loss    { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+.pt-social  { background: #faf5ff; color: #7c3aed; border: 1px solid #e9d5ff; }
+
+.stag {
+  font-size: 11px; font-weight: 600;
+  padding: 3px 9px; border-radius: 10px;
+  flex-shrink: 0; margin-left: 4px;
+}
+.t-l { background: var(--s3); color: var(--muted); }
+.t-a { background: #dcfce7; color: #15803d; }
+.t-d { background: #dcfce7; color: #15803d; }
+
+/* WA BUBBLE AREA */
+.wa-area {
+  background: var(--wa-chat);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Ccircle cx='40' cy='40' r='1' fill='rgba(0,0,0,0.03)'/%3E%3C/svg%3E");
+  padding: 14px 16px 10px;
+}
+.wa-sender { font-size: 11px; font-weight: 700; color: var(--wa-dark); margin-bottom: 5px; }
+.wa-bub {
+  display: inline-block;
+  background: var(--bubble-bg);
+  border-radius: 0 10px 10px 10px;
+  padding: 9px 13px;
+  max-width: 85%;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--bubble-txt);
+  white-space: pre-wrap;
+  word-break: break-word;
+  position: relative;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+.wa-bub::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -7px;
+  border: 7px solid transparent;
+  border-top-color: var(--bubble-bg);
+  border-left: 0;
+}
+.wa-tick { font-size: 11px; color: #999; text-align: right; margin-top: 5px; }
+
+/* Action row */
+.act-row {
+  display: flex; gap: 7px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--s);
+}
+.btn-mark {
+  flex: 1; padding: 9px;
+  background: var(--wa);
+  color: #fff; border: none;
+  border-radius: 7px; font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: var(--font);
+  transition: background 0.15s;
+}
+.btn-mark:hover { background: #20c05e; }
+.btn-sm {
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: 7px; font-size: 13px; font-weight: 500;
+  cursor: pointer; background: var(--s); font-family: var(--font);
+  text-decoration: none; color: var(--text);
+  display: flex; align-items: center; gap: 4px;
+  flex-shrink: 0; transition: background 0.12s;
+}
+.btn-sm:hover { background: var(--s2); }
+.bwa { background: #f0fdf4; color: var(--wa-dark); border-color: #bbf7d0; }
+.bwa:hover { background: #dcfce7; }
+.locked-note { padding: 12px 16px; font-size: 12px; color: var(--muted); background: var(--s2); }
+
+/* DONE BANNER */
+.done-banner {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: var(--r);
+  padding: 22px 20px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: #15803d;
+  box-shadow: var(--shadow-sm);
+}
+.done-banner p { font-size: 13px; font-weight: 400; margin-top: 5px; color: var(--muted); }
+
+/* RESET */
+.reset-row { text-align: center; font-size: 12px; color: var(--muted); cursor: pointer; padding: 6px; }
+.reset-row:hover { color: var(--text); text-decoration: underline; }
+
+/* SPINNER */
+.spin {
+  display: inline-block; width: 15px; height: 15px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: rot 0.65s linear infinite;
+  vertical-align: middle;
+}
+@keyframes rot { to { transform: rotate(360deg); } }
+
+/* TOOLTIP */
+.divider-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--muted2); padding: 0;
+}
+.divider-label::before, .divider-label::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+@media (max-width: 560px) {
+  .profile-grid { grid-template-columns: 1fr 1fr; }
+  .pg:nth-child(3n) { border-right: 1px solid var(--border); }
+  .pg:nth-child(2n) { border-right: none; }
+  .leads-select { max-width: 130px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── TOPBAR ─── -->
+<div class="topbar">
+  <div class="tb-left">
+    <div class="tb-logo">💬</div>
+    <span class="tb-title">CRM Follow-up Agent</span>
+  </div>
+  <div class="tb-right">
+    <div class="leads-select-wrap" id="leads-wrap" style="display:none;">
+      <select class="leads-select" id="leads-select" onchange="loadSavedLead()">
+        <option value="">-- Saved Leads --</option>
+      </select>
+    </div>
+    <button class="btn-new" onclick="openModal()">＋ Paste CRM Data</button>
+  </div>
+</div>
+
+<!-- ─── SHELL ─── -->
+<div class="shell" id="shell">
+  <div class="empty-state" id="empty-state">
+    <div class="empty-icon">📋</div>
+    <h2>No lead loaded</h2>
+    <p>Paste your CRM data and call note — AI will extract the profile and generate 5 psychological follow-up messages.</p>
+    <div class="empty-hint">↑ Click the green button to get started</div>
+  </div>
+</div>
+
+<!-- ─── MODAL ─── -->
+<div class="overlay" id="overlay" onclick="outsideClick(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-head-left">
+        <h3 id="modal-title">New Lead</h3>
+        <p id="modal-sub">Paste CRM data and your call note — AI does the rest</p>
+      </div>
+      <button class="btn-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="mtab on" id="tab-crm-btn" onclick="switchTab('crm')">📋 CRM Data</button>
+      <button class="mtab" id="tab-call-btn" onclick="switchTab('call')">📞 Closed Call Note</button>
+    </div>
+    <div class="modal-body" id="tab-crm">
+      <div class="field-label">Paste full copied text from Zoho CRM</div>
+      <textarea class="paste-box" id="crm-text"
+        placeholder="Paste anything from CRM — contact page, activity log, lead details, whatever you copied.
+
+AI will extract:
+  • Name, Company, Designation
+  • Course / Product interest
+  • Experience & CTC
+  • Intent of learning
+  • Call status
+
+Partial data is fine — AI uses what's available."></textarea>
+    </div>
+    <div class="modal-body" id="tab-call" style="display:none;">
+      <div class="field-label">What did you speak about on the call?</div>
+      <textarea class="paste-box" id="call-text"
+        placeholder="Write a short note — e.g:
+
+'Spoke to Arjun. 4 yrs in IT, interested in PM transition. Liked the PG program but needs to check with family. Mentioned budget is a concern. Said call back next week. Friendly tone.'
+
+This gets woven directly into all 5 follow-up messages."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-go" id="btn-go" onclick="processAll()">
+        <span id="go-inner">⚡ Extract & Generate 5 Follow-ups</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══ STATE ══ */
+let lead = {}, msgs = [], sent = 0;
+let savedLeads = JSON.parse(localStorage.getItem('crm_leads') || '[]');
+
+const STEPS = [
+  { title:'Follow-up 1 — Initial Outreach',  hint:'First message · starts here',              psych:'Liking',        pcls:'pt-liking'  },
+  { title:'Follow-up 2 — Second Touch',       hint:'Consistency · reference their interest',   psych:'Consistency',   pcls:'pt-consist' },
+  { title:'Follow-up 3 — Value Hook',         hint:'Value anchor · CRM notes driven',          psych:'Value',         pcls:'pt-value'   },
+  { title:'Follow-up 4 — Gentle Urgency',     hint:'Loss aversion · nudge toward action',      psych:'Loss aversion', pcls:'pt-loss'    },
+  { title:'Follow-up 5 — Social Proof Close', hint:'Final recovery · leave door open',         psych:'Social proof',  pcls:'pt-social'  },
+];
+
+/* ══ INIT ══ */
+window.addEventListener('DOMContentLoaded', () => {
+  refreshLeadsDropdown();
+  document.addEventListener('click', e => {
+    const dd = document.getElementById('edit-dropdown');
+    if (dd && !dd.closest('.edit-wrap')?.contains(e.target)) {
+      dd.classList.remove('open');
+    }
+  });
+});
+
+/* ══ MODAL ══ */
+function openModal(mode) {
+  document.getElementById('modal-title').textContent = mode === 'edit' ? 'Edit Lead' : 'New Lead';
+  document.getElementById('modal-sub').textContent   = 'Paste CRM data and your call note — AI does the rest';
+  document.getElementById('overlay').classList.add('open');
+  if (mode !== 'edit') {
+    document.getElementById('crm-text').value  = '';
+    document.getElementById('call-text').value = '';
+  }
+  switchTab('crm');
+}
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+function outsideClick(e) { if (e.target === document.getElementById('overlay')) closeModal(); }
+
+function switchTab(id) {
+  document.getElementById('tab-crm').style.display  = id === 'crm'  ? 'block' : 'none';
+  document.getElementById('tab-call').style.display = id === 'call' ? 'block' : 'none';
+  document.getElementById('tab-crm-btn').classList.toggle('on', id === 'crm');
+  document.getElementById('tab-call-btn').classList.toggle('on', id === 'call');
+}
+
+/* ══ PROCESS ══ */
+async function processAll() {
+  const crmText  = document.getElementById('crm-text').value.trim();
+  const callNote = document.getElementById('call-text').value.trim();
+
+  if (!crmText) {
+    document.getElementById('crm-text').classList.add('err');
+    setTimeout(() => document.getElementById('crm-text').classList.remove('err'), 2000);
+    switchTab('crm');
+    return;
+  }
+
+  const btn   = document.getElementById('btn-go');
+  const inner = document.getElementById('go-inner');
+  btn.disabled = true;
+  inner.innerHTML = '<span class="spin"></span> Extracting & Generating…';
+
+  const prompt = `You are a CRM expert and sales psychology specialist. Process the inputs below.
+
+=== CRM RAW DATA ===
+${crmText}
+
+=== CLOSED CALL NOTE ===
+${callNote || 'Not provided'}
+
+TASK 1 — EXTRACT these fields (null if not found, infer from context):
+name, company, designation, course (product/course interest), experience, ctc, intent (why they want to learn), phone, email,
+status: "not-picked" OR "call-in-progress" — infer from text (no answer/unanswered = not-picked; spoke/connected/callback = call-in-progress; default = not-picked)
+
+TASK 2 — GENERATE 5 WhatsApp follow-up messages using ALL extracted data + call note.
+
+Psychology per message:
+1. Liking + Familiarity — warm, personal, no pressure. Use their name and a specific detail.
+2. Consistency — reference their earlier interest/call. Add product context relevant to their role/background.
+3. Value anchoring — use CTC/experience/course to show clear ROI. Gentle urgency.
+4. Loss aversion — what they might miss. Tied to their specific situation. No hard sell.
+5. Social proof + final close — others like them have benefited. Warm door-open ending.
+
+Rules: English, 2–4 sentences each, no bullets, no placeholders like [Name], vary opening lines, personalise using call note, use their name in 2–3 messages naturally.
+
+RESPOND ONLY IN THIS EXACT JSON (no markdown, no backticks, no extra text):
+{"lead":{"name":"","company":"","designation":"","course":"","experience":"","ctc":"","intent":"","phone":"","email":"","status":"not-picked"},"messages":["","","","",""]}`;
+
+  try {
+    const res  = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const raw  = data.content?.find(b => b.type === 'text')?.text || '{}';
+    const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+
+    if (!parsed.lead || !Array.isArray(parsed.messages) || parsed.messages.length < 5) throw new Error('bad');
+
+    lead = { ...parsed.lead, callNote, crmRaw: crmText, savedAt: new Date().toISOString() };
+    msgs = parsed.messages;
+    sent = 0;
+
+    saveLead();
+    closeModal();
+    renderPage();
+
+  } catch(e) {
+    console.error(e);
+    alert('Something went wrong. Please try again.');
+  } finally {
+    btn.disabled = false;
+    inner.textContent = '⚡ Extract & Generate 5 Follow-ups';
+  }
+}
+
+/* ══ SAVE / LOAD LEADS ══ */
+function saveLead() {
+  const existing = savedLeads.findIndex(l => l.name === lead.name && l.phone === lead.phone);
+  const entry = { ...lead, messages: msgs, sent };
+  if (existing >= 0) savedLeads[existing] = entry;
+  else savedLeads.unshift(entry);
+  if (savedLeads.length > 30) savedLeads = savedLeads.slice(0, 30);
+  localStorage.setItem('crm_leads', JSON.stringify(savedLeads));
+  refreshLeadsDropdown();
+}
+
+function refreshLeadsDropdown() {
+  savedLeads = JSON.parse(localStorage.getItem('crm_leads') || '[]');
+  const sel  = document.getElementById('leads-select');
+  const wrap = document.getElementById('leads-wrap');
+  sel.innerHTML = '<option value="">-- Saved Leads --</option>';
+  savedLeads.forEach((l, i) => {
+    const opt = document.createElement('option');
+    const d   = new Date(l.savedAt).toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+    opt.value = i;
+    opt.textContent = `${l.name || 'Unknown'} · ${d}`;
+    sel.appendChild(opt);
+  });
+  wrap.style.display = savedLeads.length > 0 ? 'flex' : 'none';
+}
+
+function loadSavedLead() {
+  const idx = document.getElementById('leads-select').value;
+  if (idx === '') return;
+  const entry = savedLeads[parseInt(idx)];
+  if (!entry) return;
+  lead = { ...entry };
+  msgs = entry.messages || [];
+  sent = entry.sent || 0;
+  document.getElementById('crm-text').value  = lead.crmRaw  || '';
+  document.getElementById('call-text').value = lead.callNote || '';
+  renderPage();
+  document.getElementById('leads-select').value = '';
+}
+
+function deleteLead() {
+  if (!lead.name) return;
+  const idx = savedLeads.findIndex(l => l.name === lead.name && l.phone === lead.phone);
+  if (idx >= 0) savedLeads.splice(idx, 1);
+  localStorage.setItem('crm_leads', JSON.stringify(savedLeads));
+  refreshLeadsDropdown();
+  resetAll();
+  closeEditDropdown();
+}
+
+/* ══ RENDER ══ */
+function renderPage() {
+  const shell = document.getElementById('shell');
+  shell.innerHTML = '';
+
+  /* Profile Card */
+  const pc = document.createElement('div');
+  pc.className = 'profile-card';
+
+  const statusHTML = lead.status === 'call-in-progress'
+    ? `<div class="spill sp-cip"><div class="sdot sdot-cip"></div>Call In Progress</div>`
+    : `<div class="spill sp-np"><div class="sdot sdot-np"></div>Not Picked</div>`;
+
+  const fields = [
+    { l:'Company',     v: lead.company },
+    { l:'Designation', v: lead.designation },
+    { l:'Course',      v: lead.course },
+    { l:'Experience',  v: lead.experience },
+    { l:'CTC',         v: lead.ctc },
+    { l:'Contact',     v: lead.phone || lead.email },
+  ];
+
+  pc.innerHTML = `
+    <div class="profile-top">
+      <div class="avatar">${initials(lead.name)}</div>
+      <div style="flex:1;">
+        <div class="profile-name">${esc(lead.name || 'Unknown Lead')}</div>
+        <div class="profile-role">${esc([lead.designation, lead.company].filter(Boolean).join(' @ ') || 'No role info')}</div>
+      </div>
+      ${statusHTML}
+      <div class="edit-wrap" style="margin-left:8px;">
+        <button class="btn-edit" onclick="toggleEditDD(event)">✏️ Edit ▾</button>
+        <div class="edit-dropdown" id="edit-dropdown">
+          <button class="edd-item" onclick="editLead()">✏️ Re-paste CRM Data</button>
+          <button class="edd-item" onclick="editCallNote()">📞 Update Call Note</button>
+          <button class="edd-item" onclick="regenMessages()">🔄 Regenerate Messages</button>
+          <div class="edd-sep"></div>
+          <button class="edd-item danger" onclick="deleteLead()">🗑 Remove Lead</button>
+        </div>
+      </div>
+    </div>
+    <div class="profile-grid">
+      ${fields.map(f => `
+        <div class="pg">
+          <div class="pg-l">${f.l}</div>
+          <div class="pg-v ${!f.v ? 'na' : ''}">${esc(f.v || '—')}</div>
+        </div>`).join('')}
+    </div>
+    ${lead.intent ? `
+    <div class="intent-row">
+      <div class="pg-l">Intent of Learning</div>
+      <div class="pg-v">${esc(lead.intent)}</div>
+    </div>` : ''}
+    ${lead.callNote ? `
+    <div style="border-top:1px solid var(--border);">
+      <div class="call-note-bar" onclick="toggleCallNote(this)">
+        <div class="call-note-bar-left">
+          <span class="cn-badge">📞 Closed Call Note</span>
+          <span style="color:var(--muted);font-size:12px;font-weight:400;">${esc(lead.callNote.slice(0,60))}${lead.callNote.length > 60 ? '…' : ''}</span>
+        </div>
+        <span class="cn-chevron" id="cn-chev">▾</span>
+      </div>
+      <div class="call-note-body" id="call-note-body">
+        ${esc(lead.callNote)}
+      </div>
+    </div>` : ''}
+  `;
+  shell.appendChild(pc);
+
+  /* Follow-up Card */
+  const fu = document.createElement('div');
+  fu.className = 'fu-card';
+  fu.id = 'fu-card';
+  fu.innerHTML = `
+    <div class="fu-top">
+      <div class="fu-title">
+        📲 Follow-up Sequence
+        <span class="fu-sub">5 psychological steps</span>
+      </div>
+      <div class="prog-info">
+        <span class="prog-num" id="prog-num">0 / 5</span>
+        <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="step-list" id="step-list"></div>
+  `;
+  shell.appendChild(fu);
+
+  const db = document.createElement('div');
+  db.id = 'done-b';
+  db.className = 'done-banner';
+  db.style.display = 'none';
+  db.innerHTML = `🎉 All 5 follow-ups sent!<p>Full psychological sequence complete for ${esc(lead.name || 'this lead')}.</p>`;
+  shell.appendChild(db);
+
+  const rr = document.createElement('div');
+  rr.className = 'reset-row';
+  rr.textContent = '↩ Load another lead or paste new CRM data';
+  rr.onclick = resetAll;
+  shell.appendChild(rr);
+
+  renderSteps();
+}
+
+function renderSteps() {
+  updateProg();
+  const list = document.getElementById('step-list');
+  if (!list) return;
+  list.innerHTML = '';
+  const time  = new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+  const waNum = (lead.phone || '').replace(/\D/g, '');
+
+  msgs.forEach((msg, i) => {
+    const isSent = i < sent, isAct = i === sent, isLock = i > sent;
+    const sc = isSent ? 'done' : isAct ? 'active' : 'locked';
+    const nc = isSent ? 'n-d'  : isAct ? 'n-a'    : 'n-l';
+    const tc = isSent ? 't-d'  : isAct ? 't-a'    : 't-l';
+    const tt = isSent ? '✓ Sent' : isAct ? 'Ready' : 'Locked';
+    const wa = waNum ? `https://wa.me/${waNum}?text=${encodeURIComponent(msg)}` : null;
+    const s  = STEPS[i];
+
+    const div = document.createElement('div');
+    div.className = `step ${sc}`;
+    div.id = `step-${i}`;
+    div.innerHTML = `
+      <div class="step-head">
+        <div class="snum ${nc}">${isSent ? '✓' : i+1}</div>
+        <div class="smeta">
+          <div class="stitle">${esc(s.title)}</div>
+          <div class="shint">${esc(s.hint)}</div>
+        </div>
+        <span class="psych-tag ${s.pcls}">${s.psych}</span>
+        <span class="stag ${tc}">${tt}</span>
+      </div>
+      ${!isLock ? `
+        <div class="wa-area">
+          <div class="wa-sender">${esc(lead.name || 'You')}</div>
+          <div class="wa-bub">${esc(msg)}</div>
+          <div class="wa-tick">${time} ✓✓</div>
+        </div>
+        ${!isSent ? `
+          <div class="act-row">
+            <button class="btn-mark" onclick="markSent(${i})">✅ Mark as Sent — Unlock Next</button>
+            ${wa ? `<a class="btn-sm bwa" href="${wa}" target="_blank">📲 WhatsApp</a>` : ''}
+            <button class="btn-sm" onclick="copyMsg(${i}, this)">📋 Copy</button>
+          </div>` : ''}
+      ` : `<div class="locked-note">🔒 Complete the previous step to unlock this message.</div>`}
+    `;
+    list.appendChild(div);
+  });
+}
+
+function markSent(i) {
+  if (i !== sent) return;
+  sent = i + 1;
+  saveLead();
+  renderSteps();
+  if (sent === 5) {
+    const b = document.getElementById('done-b');
+    if (b) { b.style.display = 'block'; b.scrollIntoView({ behavior:'smooth', block:'center' }); }
+  } else {
+    setTimeout(() => document.getElementById(`step-${sent}`)?.scrollIntoView({ behavior:'smooth', block:'center' }), 160);
+  }
+}
+
+function updateProg() {
+  const pct = Math.round(sent / 5 * 100);
+  const f = document.getElementById('prog-fill');
+  const n = document.getElementById('prog-num');
+  if (f) f.style.width = pct + '%';
+  if (n) n.textContent = `${sent} / 5`;
+}
+
+function copyMsg(i, btn) {
+  navigator.clipboard.writeText(msgs[i]).then(() => {
+    btn.textContent = '✅ Copied';
+    setTimeout(() => { btn.textContent = '📋 Copy'; }, 1500);
+  });
+}
+
+/* ══ CALL NOTE TOGGLE ══ */
+function toggleCallNote(bar) {
+  const body = document.getElementById('call-note-body');
+  const chev = document.getElementById('cn-chev');
+  if (!body) return;
+  body.classList.toggle('open');
+  chev?.classList.toggle('open');
+}
+
+/* ══ EDIT DROPDOWN ══ */
+function toggleEditDD(e) {
+  e.stopPropagation();
+  document.getElementById('edit-dropdown')?.classList.toggle('open');
+}
+function closeEditDropdown() { document.getElementById('edit-dropdown')?.classList.remove('open'); }
+
+function editLead() {
+  closeEditDropdown();
+  openModal('edit');
+  switchTab('crm');
+}
+function editCallNote() {
+  closeEditDropdown();
+  openModal('edit');
+  switchTab('call');
+}
+async function regenMessages() {
+  closeEditDropdown();
+  const crmText  = lead.crmRaw || '';
+  const callNote = lead.callNote || '';
+  document.getElementById('crm-text').value  = crmText;
+  document.getElementById('call-text').value = callNote;
+  sent = 0;
+  await processAll();
+}
+
+/* ══ RESET ══ */
+function resetAll() {
+  lead = {}; msgs = []; sent = 0;
+  const shell = document.getElementById('shell');
+  shell.innerHTML = `
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">📋</div>
+      <h2>No lead loaded</h2>
+      <p>Paste your CRM data and call note — AI will extract the profile and generate 5 psychological follow-up messages.</p>
+      <div class="empty-hint">↑ Click the green button to get started</div>
+    </div>`;
+}
+
+/* ══ UTILS ══ */
+function initials(n) { return (n||'?').trim().split(/\s+/).map(w=>w[0]?.toUpperCase()||'').slice(0,2).join(''); }
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+</script>
+</body>
+</html>
