@@ -195,7 +195,11 @@ body {
   align-items: center;
   justify-content: center;
   padding: 20px;
+  opacity: 1;
   transition: opacity 0.35s ease;
+}
+.api-gate.hidden {
+  display: none !important;
 }
 .api-gate.hide {
   opacity: 0;
@@ -994,8 +998,9 @@ async function saveApiKey() {
       status.textContent = '✅ Key verified! Loading…';
       status.className = 'api-status ok';
       setTimeout(() => {
-        document.getElementById('api-gate').classList.add('hide');
-        setTimeout(() => { document.getElementById('api-gate').style.display = 'none'; }, 350);
+        const gate = document.getElementById('api-gate');
+        gate.classList.add('hide');
+        setTimeout(() => gate.classList.add('hidden'), 350);
         showToast('Groq API key verified and saved ✓', 'success');
       }, 600);
     } else {
@@ -1026,9 +1031,14 @@ const STEPS = [
 /* ══ INIT ══ */
 window.addEventListener('DOMContentLoaded', () => {
   refreshLeadsDropdown();
-  if (API_KEY) {
-    document.getElementById('api-gate').style.display = 'none';
+
+  // Verify stored key is still valid format before hiding gate
+  if (API_KEY && API_KEY.startsWith('gsk_') && API_KEY.length > 20) {
+    const gate = document.getElementById('api-gate');
+    gate.classList.add('hide');
+    setTimeout(() => gate.classList.add('hidden'), 350);
   }
+
   document.addEventListener('click', e => {
     const dd = document.getElementById('edit-dropdown');
     if (dd && !dd.closest('.edit-wrap')?.contains(e.target)) {
@@ -1040,8 +1050,9 @@ window.addEventListener('DOMContentLoaded', () => {
 /* ══ MODAL ══ */
 function openModal(mode) {
   if (!API_KEY) {
-    document.getElementById('api-gate').style.display = 'flex';
-    document.getElementById('api-gate').classList.remove('hide');
+    const gate = document.getElementById('api-gate');
+    gate.classList.remove('hidden');
+    gate.classList.remove('hide');
     showToast('Please verify your Groq API key first', 'error');
     return;
   }
