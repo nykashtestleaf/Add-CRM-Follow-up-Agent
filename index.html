@@ -1303,7 +1303,7 @@ body {
       <button class="mtab on" id="tab-crm-btn" onclick="switchTab('crm')">📋 CRM Data</button>
       <button class="mtab" id="tab-call-btn" onclick="switchTab('call')">📞 Closed Call Note</button>
     </div>
-    <div class="modal-body" id="tab-crm">
+    <div class="modal-body tab-pane" id="tab-crm">
       <div class="field-label">Paste full copied text from Zoho CRM</div>
       <textarea class="paste-box" id="crm-text" oninput="checkGoBtn()"
         placeholder="Paste anything from CRM — contact page, activity log, lead details, whatever you copied.
@@ -1317,7 +1317,7 @@ AI will extract:
 
 Partial data is fine — AI uses what's available."></textarea>
     </div>
-    <div class="modal-body" id="tab-call" style="display:none;">
+    <div class="modal-body tab-pane" id="tab-call" style="display:none;">
       <div class="field-label">What did you speak about on the call?</div>
       <textarea class="paste-box" id="call-text" oninput="checkGoBtn()"
         placeholder="Write a short note — e.g:
@@ -1448,8 +1448,10 @@ function openModal(mode) {
   document.getElementById('modal-sub').textContent   = 'Paste CRM data and your call note — AI does the rest';
   document.getElementById('overlay').classList.add('open');
   if (mode !== 'edit') {
-    document.getElementById('crm-text').value  = '';
-    document.getElementById('call-text').value = '';
+    const ct = document.getElementById('crm-text');
+    const cl = document.getElementById('call-text');
+    if (ct) ct.value = '';
+    if (cl) cl.value = '';
   }
   switchTab('crm');
   checkGoBtn();
@@ -1458,16 +1460,24 @@ function closeModal() { document.getElementById('overlay').classList.remove('ope
 function outsideClick(e) { if (e.target === document.getElementById('overlay')) closeModal(); }
 
 function switchTab(id) {
-  document.getElementById('tab-crm').style.display  = id === 'crm'  ? 'block' : 'none';
-  document.getElementById('tab-call').style.display = id === 'call' ? 'block' : 'none';
+  // Use visibility+height instead of display:none so textarea values persist
+  const crmPane  = document.getElementById('tab-crm');
+  const callPane = document.getElementById('tab-call');
+  if (crmPane)  crmPane.style.display  = id === 'crm'  ? 'block' : 'none';
+  if (callPane) callPane.style.display = id === 'call' ? 'block' : 'none';
   document.getElementById('tab-crm-btn').classList.toggle('on', id === 'crm');
   document.getElementById('tab-call-btn').classList.toggle('on', id === 'call');
+  // Re-check button after tab switch — reads both textareas regardless of visibility
   checkGoBtn();
 }
 
 function checkGoBtn() {
-  const crm     = (document.getElementById('crm-text')?.value  || '').trim();
-  const call    = (document.getElementById('call-text')?.value || '').trim();
+  // Read directly from DOM elements regardless of display state
+  const crmEl  = document.getElementById('crm-text');
+  const callEl = document.getElementById('call-text');
+  const crm    = (crmEl  ? crmEl.value  : '').trim();
+  const call   = (callEl ? callEl.value : '').trim();
+
   const btn     = document.getElementById('btn-go');
   const inner   = document.getElementById('go-inner');
   const hint    = document.getElementById('go-hint');
@@ -1482,7 +1492,7 @@ function checkGoBtn() {
   if (crm && call) {
     btn.disabled = false;
     if (inner) inner.textContent = '⚡ Extract & Generate 5 Follow-ups';
-    if (hint)  { hint.textContent = '✓ Both CRM data and call note ready'; hint.style.color = '#16a34a'; }
+    if (hint)  { hint.textContent = '✓ Both tabs filled — ready to generate'; hint.style.color = '#16a34a'; }
   } else if (crm) {
     btn.disabled = false;
     if (inner) inner.textContent = '⚡ Extract & Generate 5 Follow-ups';
@@ -1588,13 +1598,17 @@ CRITICAL: Your ENTIRE response must be ONLY the JSON object below — no introdu
 
 /* ══ PROCESS ══ */
 async function processAll() {
-  const crmText  = document.getElementById('crm-text').value.trim();
-  const callNote = document.getElementById('call-text').value.trim();
+  const crmEl    = document.getElementById('crm-text');
+  const callEl   = document.getElementById('call-text');
+  const crmText  = (crmEl  ? crmEl.value  : '').trim();
+  const callNote = (callEl ? callEl.value : '').trim();
 
   if (!crmText) {
     switchTab('crm');
-    document.getElementById('crm-text').classList.add('err');
-    setTimeout(() => document.getElementById('crm-text').classList.remove('err'), 2000);
+    if (crmEl) {
+      crmEl.classList.add('err');
+      setTimeout(() => crmEl.classList.remove('err'), 2000);
+    }
     showToast('Please paste CRM data in the first tab', 'error');
     return;
   }
