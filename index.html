@@ -630,6 +630,104 @@ body {
 }
 .call-note-body.open { display: block; }
 
+
+/* ─── TONE SELECTOR ─── */
+.tone-bar {
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--s2);
+}
+.tone-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted2);
+  margin-bottom: 9px;
+}
+.tone-btns {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.tone-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--s);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  position: relative;
+}
+.tone-btn:hover {
+  border-color: var(--wa-dark);
+  color: var(--wa-dark);
+  background: #f0fdf4;
+}
+.tone-btn.active {
+  background: var(--wa-dark);
+  color: #fff;
+  border-color: var(--wa-dark);
+  box-shadow: 0 2px 8px rgba(18,140,126,0.25);
+}
+.tone-btn.active::after {
+  content: '✓';
+  font-size: 10px;
+  opacity: 0.85;
+}
+.tone-regen-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 11px;
+  padding-top: 11px;
+  border-top: 1px solid var(--border);
+}
+.tone-regen-row span {
+  font-size: 12px;
+  color: var(--muted);
+  flex: 1;
+  line-height: 1.45;
+}
+.btn-regen {
+  padding: 7px 16px;
+  background: var(--wa-dark);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.btn-regen:hover { background: #0f6b5f; }
+.btn-regen:disabled { background: #d1d5db; color: #9ca3af; cursor: not-allowed; }
+.tone-active-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 10px;
+  background: rgba(18,140,126,0.1);
+  color: var(--wa-dark);
+  border: 1px solid rgba(18,140,126,0.2);
+}
+
 /* ─── FOLLOW-UP CARD ─── */
 .fu-card {
   background: var(--s);
@@ -943,7 +1041,7 @@ This gets woven directly into all 5 follow-up messages."></textarea>
 
 <script>
 /* ══ STATE ══ */
-let lead = {}, msgs = [], sent = 0;
+let lead = {}, msgs = [], sent = 0, currentTone = 'Warm';
 let savedLeads = JSON.parse(localStorage.getItem('crm_leads') || '[]');
 let API_KEY = sessionStorage.getItem('crm_api_key') || '';
 
@@ -1000,8 +1098,11 @@ async function saveApiKey() {
   status.className = 'api-status checking';
 
   try {
-    const res = await fetch('https://api.groq.com/openai/v1/models', {
-      headers: { 'Authorization': `Bearer ${val}` }
+    const res = await fetch('https://groq-proxy.nykash.workers.dev/openai/v1/models', {
+      headers: {
+        'Authorization': `Bearer ${val}`,
+        'x-groq-key': val
+      }
     });
     if (res.ok) {
       API_KEY = val;
@@ -1144,30 +1245,49 @@ ${crmText}
 === CLOSED CALL NOTE ===
 ${callNote || 'Not provided'}
 
-TASK 1 — EXTRACT these fields (null if not found, infer from context):
-name, company, designation, course (product/course interest), experience, ctc, intent (why they want to learn), phone, email,
-status: "not-picked" OR "call-in-progress" — infer from text (no answer/unanswered = not-picked; spoke/connected/callback = call-in-progress; default = not-picked)
+TASK 1 — DATA EXTRACTION
+Extract:
+name, company, designation, course, experience, ctc, intent, phone, email
+status:
+"not-picked" → no answer / unreachable
+"call-in-progress" → spoke / connected
+Default → "not-picked"
 
-TASK 2 — GENERATE 5 WhatsApp follow-up messages using ALL extracted data + call note.
+TASK 2 — GENERATE 5 WHATSAPP FOLLOW-UPS
 
-Psychology per message:
-1. Liking + Familiarity — warm, personal, no pressure. Use their name and a specific detail.
-2. Consistency — reference their earlier interest/call. Add product context relevant to their role/background.
-3. Value anchoring — use CTC/experience/course to show clear ROI. Gentle urgency.
-4. Loss aversion — what they might miss. Tied to their specific situation. No hard sell.
-5. Social proof + final close — others like them have benefited. Warm door-open ending.
+BRANCHING:
+IF status = "not-picked":
+Curiosity → Relevance → Value → Awareness → Soft Close
 
-Rules: English, 2–4 sentences each, no bullets, no placeholders like [Name], vary opening lines, personalise using call note, use their name in 2–3 messages naturally.
+IF status = "call-in-progress":
+Trust → Alignment → Value → Reassurance → Close
 
-RESPOND ONLY IN THIS EXACT JSON (no markdown, no backticks, no extra text):
+Message Flow (Brian Tracy):
+1. Build Trust
+2. Identify Needs
+3. Present Solution
+4. Handle Objection / Risk
+5. Close + Social Proof
+
+RULES:
+- English
+- 2–4 sentences each
+- No placeholders
+- Use name 2–3 times only
+- No repetition
+- Personalize using CRM + call note
+- Clear tone shift across messages
+
+OUTPUT STRICT JSON:
 {"lead":{"name":"","company":"","designation":"","course":"","experience":"","ctc":"","intent":"","phone":"","email":"","status":"not-picked"},"messages":["","","","",""]}`;
 
   try {
-    const res  = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const res  = await fetch('https://groq-proxy.nykash.workers.dev/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`
+        'Authorization': `Bearer ${API_KEY}`,
+        'x-groq-key': API_KEY
       },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
@@ -1347,6 +1467,20 @@ function renderPage() {
         <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
       </div>
     </div>
+    <div class="tone-bar">
+      <div class="tone-label">Message Tone — select to regenerate all 5 messages</div>
+      <div class="tone-btns">
+        <button class="tone-btn ${currentTone === 'Warm' ? 'active' : ''}"         onclick="selectTone('Warm')">🌤 Warm</button>
+        <button class="tone-btn ${currentTone === 'Friendly' ? 'active' : ''}"     onclick="selectTone('Friendly')">😊 Friendly</button>
+        <button class="tone-btn ${currentTone === 'Personal' ? 'active' : ''}"     onclick="selectTone('Personal')">🤝 Personal</button>
+        <button class="tone-btn ${currentTone === 'Empathetic' ? 'active' : ''}"   onclick="selectTone('Empathetic')">💛 Empathetic</button>
+        <button class="tone-btn ${currentTone === 'Conversational' ? 'active' : ''}" onclick="selectTone('Conversational')">💬 Conversational</button>
+      </div>
+      <div class="tone-regen-row">
+        <span>Active: <span class="tone-active-label" id="tone-active-label">${currentTone}</span> — Messages reflect this tone across all 5 follow-ups</span>
+        <button class="btn-regen" id="btn-regen" onclick="regenWithTone()">🔄 Regenerate</button>
+      </div>
+    </div>
     <div class="step-list" id="step-list"></div>
   `;
   shell.appendChild(fu);
@@ -1413,6 +1547,114 @@ function renderSteps() {
     `;
     list.appendChild(div);
   });
+}
+
+function selectTone(tone) {
+  currentTone = tone;
+  document.querySelectorAll('.tone-btn').forEach(btn => {
+    const match = btn.getAttribute('onclick')?.includes(`'${tone}'`);
+    btn.classList.toggle('active', !!match);
+  });
+  const lbl = document.getElementById('tone-active-label');
+  if (lbl) lbl.textContent = tone;
+}
+
+async function regenWithTone() {
+  if (!lead.name) return;
+  const btn   = document.getElementById('btn-regen');
+  const inner = btn;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin" style="border-top-color:#fff;border-color:rgba(255,255,255,0.3)"></span> Generating…';
+
+  const toneInstructions = {
+    'Warm': `Tone: WARM — Write like a caring mentor. Use soft, encouraging language. Feel genuinely invested in their growth. Messages feel like they come from someone who truly wants to help them succeed, not just sell.`,
+    'Friendly': `Tone: FRIENDLY — Write like a cheerful, upbeat colleague. Use light energy, positive language, and a smile-through-text feel. Keep it bright and easy to read. Never stiff, never formal.`,
+    'Personal': `Tone: PERSONAL — Write like you know them well. Reference their specific situation, background, or goal directly. Feel tailored to them alone, not a template. Every message must feel like it was written specifically for this one person.`,
+    'Empathetic': `Tone: EMPATHETIC — Acknowledge their situation with genuine understanding. Show you get their challenges, pressures, or hesitation. Never pushy. Lead with emotion before logic. Make them feel heard and understood first.`,
+    'Conversational': `Tone: CONVERSATIONAL — Write like a real text message between two people. Short, natural, relaxed. Like you're chatting, not pitching. Use everyday language. No formality. Read like a human, not a bot.`
+  };
+
+  const toneRule = toneInstructions[currentTone] || toneInstructions['Warm'];
+  const crmText  = lead.crmRaw  || '';
+  const callNote = lead.callNote || '';
+
+  const prompt = `You are a CRM expert and sales psychology specialist. Process the inputs below.
+
+=== CRM RAW DATA ===
+${crmText}
+
+=== CLOSED CALL NOTE ===
+${callNote || 'Not provided'}
+
+=== LEAD PROFILE (already extracted) ===
+Name: ${lead.name || ''}
+Company: ${lead.company || ''}
+Designation: ${lead.designation || ''}
+Course: ${lead.course || ''}
+Experience: ${lead.experience || ''}
+CTC: ${lead.ctc || ''}
+Intent: ${lead.intent || ''}
+Status: ${lead.status || 'not-picked'}
+
+TASK — REGENERATE 5 WHATSAPP FOLLOW-UP MESSAGES
+
+${toneRule}
+
+BRANCHING:
+IF status = "not-picked":
+Curiosity → Relevance → Value → Awareness → Soft Close
+
+IF status = "call-in-progress":
+Trust → Alignment → Value → Reassurance → Close
+
+Message Flow (Brian Tracy):
+1. Build Trust
+2. Identify Needs
+3. Present Solution
+4. Handle Objection / Risk
+5. Close + Social Proof
+
+RULES:
+- Apply the tone consistently and distinctly across ALL 5 messages
+- English, 2–4 sentences each
+- No placeholders
+- Use name 2–3 times only
+- No repetition between messages
+- Personalize using CRM + call note
+- Clear tone shift across messages — each message should feel like a natural next step
+
+OUTPUT STRICT JSON (messages array only — 5 strings):
+{"messages":["","","","",""]}`;
+
+  try {
+    const res = await fetch('https://groq-proxy.nykash.workers.dev/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}`, 'x-groq-key': API_KEY },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 1500,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error?.message || `API error ${res.status}`);
+    const raw    = data.choices?.[0]?.message?.content || '{}';
+    const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    if (!Array.isArray(parsed.messages) || parsed.messages.length < 5) throw new Error('bad response');
+
+    msgs = parsed.messages;
+    sent = 0;
+    saveLead();
+    renderSteps();
+    showToast(`Messages regenerated with ${currentTone} tone ✓`, 'success');
+
+  } catch(e) {
+    console.error(e);
+    showToast(`Failed to regenerate: ${e.message}`, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🔄 Regenerate';
+  }
 }
 
 function markSent(i) {
