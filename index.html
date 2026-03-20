@@ -400,6 +400,16 @@ body {
   display: flex; align-items: center; gap: 6px;
 }
 .mtab.on { color: var(--accent); border-bottom-color: var(--accent); }
+.mtab.filled::after {
+  content: '';
+  display: inline-block;
+  width: 6px; height: 6px;
+  background: var(--wa);
+  border-radius: 50%;
+  margin-left: 6px;
+  vertical-align: middle;
+  margin-bottom: 1px;
+}
 
 .modal-body {
   padding: 18px 20px;
@@ -901,7 +911,7 @@ body {
     </div>
     <div class="modal-body" id="tab-crm">
       <div class="field-label">Paste full copied text from Zoho CRM</div>
-      <textarea class="paste-box" id="crm-text"
+      <textarea class="paste-box" id="crm-text" oninput="checkGoBtn()"
         placeholder="Paste anything from CRM — contact page, activity log, lead details, whatever you copied.
 
 AI will extract:
@@ -915,7 +925,7 @@ Partial data is fine — AI uses what's available."></textarea>
     </div>
     <div class="modal-body" id="tab-call" style="display:none;">
       <div class="field-label">What did you speak about on the call?</div>
-      <textarea class="paste-box" id="call-text"
+      <textarea class="paste-box" id="call-text" oninput="checkGoBtn()"
         placeholder="Write a short note — e.g:
 
 'Spoke to Arjun. 4 yrs in IT, interested in PM transition. Liked the PG program but needs to check with family. Mentioned budget is a concern. Said call back next week. Friendly tone.'
@@ -923,9 +933,10 @@ Partial data is fine — AI uses what's available."></textarea>
 This gets woven directly into all 5 follow-up messages."></textarea>
     </div>
     <div class="modal-footer">
-      <button class="btn-go" id="btn-go" onclick="processAll()">
-        <span id="go-inner">⚡ Extract & Generate 5 Follow-ups</span>
+      <button class="btn-go" id="btn-go" onclick="processAll()" disabled>
+        <span id="go-inner">⚡ Paste CRM data to unlock</span>
       </button>
+      <div id="go-hint" style="text-align:center;font-size:11px;color:#9ca3af;margin-top:8px;">Paste CRM data above to enable — call note is optional</div>
     </div>
   </div>
 </div>
@@ -1064,6 +1075,7 @@ function openModal(mode) {
     document.getElementById('call-text').value = '';
   }
   switchTab('crm');
+  checkGoBtn();
 }
 function closeModal() { document.getElementById('overlay').classList.remove('open'); }
 function outsideClick(e) { if (e.target === document.getElementById('overlay')) closeModal(); }
@@ -1073,6 +1085,35 @@ function switchTab(id) {
   document.getElementById('tab-call').style.display = id === 'call' ? 'block' : 'none';
   document.getElementById('tab-crm-btn').classList.toggle('on', id === 'crm');
   document.getElementById('tab-call-btn').classList.toggle('on', id === 'call');
+  checkGoBtn();
+}
+
+function checkGoBtn() {
+  const crm  = document.getElementById('crm-text')?.value.trim() || '';
+  const call = document.getElementById('call-text')?.value.trim() || '';
+  const btn  = document.getElementById('btn-go');
+  const hint = document.getElementById('go-hint');
+  const crmTab  = document.getElementById('tab-crm-btn');
+  const callTab = document.getElementById('tab-call-btn');
+  if (!btn) return;
+
+  // Show green dot on tabs that have content
+  if (crmTab)  crmTab.classList.toggle('filled', crm.length > 0);
+  if (callTab) callTab.classList.toggle('filled', call.length > 0);
+
+  if (crm && call) {
+    btn.disabled = false;
+    btn.querySelector('#go-inner').textContent = '⚡ Extract & Generate 5 Follow-ups';
+    if (hint) { hint.textContent = '✓ Both tabs filled — ready to generate'; hint.style.color = '#16a34a'; }
+  } else if (crm) {
+    btn.disabled = false;
+    btn.querySelector('#go-inner').textContent = '⚡ Extract & Generate 5 Follow-ups';
+    if (hint) { hint.textContent = 'Call note is optional — you can still generate'; hint.style.color = '#9ca3af'; }
+  } else {
+    btn.disabled = true;
+    btn.querySelector('#go-inner').textContent = '⚡ Paste CRM data to unlock';
+    if (hint) { hint.textContent = 'Paste CRM data above to enable — call note is optional'; hint.style.color = '#9ca3af'; }
+  }
 }
 
 /* ══ PROCESS ══ */
@@ -1081,9 +1122,10 @@ async function processAll() {
   const callNote = document.getElementById('call-text').value.trim();
 
   if (!crmText) {
+    switchTab('crm');
     document.getElementById('crm-text').classList.add('err');
     setTimeout(() => document.getElementById('crm-text').classList.remove('err'), 2000);
-    switchTab('crm');
+    showToast('Please paste CRM data in the first tab', 'error');
     return;
   }
 
