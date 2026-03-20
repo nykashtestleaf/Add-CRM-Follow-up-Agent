@@ -1604,7 +1604,7 @@ async function processAll() {
   const btn   = document.getElementById('btn-go');
   const inner = document.getElementById('go-inner');
   btn.disabled = true;
-  const inner = document.getElementById('go-inner'); if(inner) inner.innerHTML = '<span class="spin"></span> Extracting & Generating…';
+  if (inner) inner.innerHTML = '<span class="spin"></span> Extracting & Generating…';
 
   const prompt = `You are a CRM expert and sales psychology specialist. Process the inputs below.
 
