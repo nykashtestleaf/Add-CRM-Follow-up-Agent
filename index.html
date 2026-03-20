@@ -148,6 +148,71 @@ body {
 .empty-state p  { font-size: 14px; color: var(--muted); max-width: 320px; }
 .empty-hint { font-size: 12px; color: var(--muted2); display: flex; align-items: center; gap: 5px; }
 
+/* ─── TOAST ─── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: #1f2937;
+  color: #fff;
+  padding: 11px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  z-index: 9999;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+  white-space: nowrap;
+  max-width: 90vw;
+}
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.toast.error { background: #dc2626; }
+.toast.success { background: #16a34a; }
+
+/* ─── API KEY BANNER ─── */
+.api-banner {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.api-banner-text { font-size: 13px; color: #92400e; flex: 1; min-width: 180px; }
+.api-banner-text a { color: #b45309; font-weight: 600; }
+.api-key-input {
+  flex: 1;
+  min-width: 200px;
+  border: 1.5px solid #fde68a;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: var(--mono);
+  color: var(--text);
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.api-key-input:focus { border-color: #f59e0b; }
+.btn-save-key {
+  padding: 8px 16px;
+  background: #f59e0b;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font);
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.btn-save-key:hover { background: #d97706; }
+
 /* ─── MODAL ─── */
 .overlay {
   position: fixed; inset: 0;
@@ -645,6 +710,9 @@ body {
 </head>
 <body>
 
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
 <!-- ─── TOPBAR ─── -->
 <div class="topbar">
   <div class="tb-left">
@@ -663,6 +731,15 @@ body {
 
 <!-- ─── SHELL ─── -->
 <div class="shell" id="shell">
+
+  <!-- API KEY BANNER -->
+  <div class="api-banner" id="api-banner" style="display:none;">
+    <div class="api-banner-text">
+      🔑 Enter your <a href="https://console.groq.com/keys" target="_blank">Groq API key</a> to power the AI extraction. Stored only in this browser session.
+    </div>
+    <input type="password" class="api-key-input" id="api-key-input" placeholder="gsk_..." autocomplete="off" />
+    <button class="btn-save-key" onclick="saveApiKey()">Save Key</button>
+  </div>
   <div class="empty-state" id="empty-state">
     <div class="empty-icon">📋</div>
     <h2>No lead loaded</h2>
@@ -720,6 +797,26 @@ This gets woven directly into all 5 follow-up messages."></textarea>
 /* ══ STATE ══ */
 let lead = {}, msgs = [], sent = 0;
 let savedLeads = JSON.parse(localStorage.getItem('crm_leads') || '[]');
+let API_KEY = sessionStorage.getItem('crm_api_key') || '';
+
+/* ══ TOAST ══ */
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type ? ' ' + type : '');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+/* ══ API KEY ══ */
+function saveApiKey() {
+  const val = document.getElementById('api-key-input').value.trim();
+  if (!val.startsWith('gsk_')) { showToast('Groq key should start with gsk_...', 'error'); return; }
+  API_KEY = val;
+  sessionStorage.setItem('crm_api_key', val);
+  document.getElementById('api-banner').style.display = 'none';
+  showToast('Groq API key saved for this session ✓', 'success');
+}
 
 const STEPS = [
   { title:'Follow-up 1 — Initial Outreach',  hint:'First message · starts here',              psych:'Liking',        pcls:'pt-liking'  },
@@ -732,6 +829,9 @@ const STEPS = [
 /* ══ INIT ══ */
 window.addEventListener('DOMContentLoaded', () => {
   refreshLeadsDropdown();
+  if (!API_KEY) {
+    document.getElementById('api-banner').style.display = 'flex';
+  }
   document.addEventListener('click', e => {
     const dd = document.getElementById('edit-dropdown');
     if (dd && !dd.closest('.edit-wrap')?.contains(e.target)) {
@@ -773,6 +873,13 @@ async function processAll() {
     return;
   }
 
+  if (!API_KEY) {
+    document.getElementById('api-banner').style.display = 'flex';
+    closeModal();
+    showToast('Please enter your Groq API key first', 'error');
+    return;
+  }
+
   const btn   = document.getElementById('btn-go');
   const inner = document.getElementById('go-inner');
   btn.disabled = true;
@@ -805,17 +912,28 @@ RESPOND ONLY IN THIS EXACT JSON (no markdown, no backticks, no extra text):
 {"lead":{"name":"","company":"","designation":"","course":"","experience":"","ctc":"","intent":"","phone":"","email":"","status":"not-picked"},"messages":["","","","",""]}`;
 
   try {
-    const res  = await fetch('https://api.anthropic.com/v1/messages', {
+    const res  = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${API_KEY}`
+      },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 2000,
         messages: [{ role: 'user', content: prompt }]
       })
     });
     const data = await res.json();
-    const raw  = data.content?.find(b => b.type === 'text')?.text || '{}';
+
+    if (!res.ok) {
+      const errMsg = data?.error?.message || `API error ${res.status}`;
+      if (res.status === 401) throw new Error('401 - Invalid or missing Groq API key');
+      if (res.status === 429) throw new Error('429 - Rate limit reached, wait a moment');
+      throw new Error(errMsg);
+    }
+
+    const raw  = data.choices?.[0]?.message?.content || '{}';
     const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
 
     if (!parsed.lead || !Array.isArray(parsed.messages) || parsed.messages.length < 5) throw new Error('bad');
@@ -830,7 +948,14 @@ RESPOND ONLY IN THIS EXACT JSON (no markdown, no backticks, no extra text):
 
   } catch(e) {
     console.error(e);
-    alert('Something went wrong. Please try again.');
+    const msg = e.message?.includes('401') || e.message?.includes('auth')
+      ? 'Invalid Groq API key — check your key at console.groq.com and try again.'
+      : e.message?.includes('429')
+      ? 'Rate limit reached — wait a moment and try again.'
+      : e.message?.includes('fetch') || e.message?.includes('network')
+      ? 'Network error — check your connection and try again.'
+      : `Error: ${e.message || 'Something went wrong. Check console for details.'}`;
+    showToast(msg, 'error');
   } finally {
     btn.disabled = false;
     inner.textContent = '⚡ Extract & Generate 5 Follow-ups';
