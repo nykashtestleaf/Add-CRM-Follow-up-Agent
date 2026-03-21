@@ -6,702 +6,263 @@
 <title>CRM Follow-up AI Agent</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f5f7;--s:#fff;--s2:#f8f9fb;--s3:#f1f3f6;
+  --border:#e4e7ec;--border2:#cdd1da;
+  --text:#0f1623;--muted:#5c6479;--muted2:#9aa0b2;
+  --accent:#1a56db;--accent-bg:#eff4ff;--accent-bd:#c3d3f7;
+  --green:#0d7a45;--green-bg:#e6f5ec;--green-bd:#a3d9b8;
+  --purple:#5b21b6;--purple-bg:#f0ebff;--purple-bd:#c4b0f5;
+  --red:#b91c1c;--amber:#92400e;--amber-bg:#fef3c7;
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --r:8px;--sh:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --sh-md:0 3px 10px rgba(0,0,0,.08);
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
 
-:root {
-  --bg:       #f5f6f8;
-  --s:        #ffffff;
-  --s2:       #f9fafb;
-  --s3:       #f0f2f5;
-  --border:   #e5e7eb;
-  --border2:  #d1d5db;
-  --text:     #111827;
-  --muted:    #6b7280;
-  --muted2:   #9ca3af;
-  --green:    #16a34a;
-  --green-bg: #dcfce7;
-  --wa:       #25D366;
-  --wa-dark:  #128C7E;
-  --purple:   #7c3aed;
-  --purple-bg:#f5f3ff;
-  --amber:    #d97706;
-  --red:      #dc2626;
-  --font:     'DM Sans', sans-serif;
-  --mono:     'DM Mono', monospace;
-  --r:        10px;
-  --shadow:   0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md:0 4px 12px rgba(0,0,0,0.08);
-}
+/* GATE */
+.gate{position:fixed;inset:0;background:var(--bg);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;transition:opacity .3s}
+.gate.hide{opacity:0;pointer-events:none}.gate.hidden{display:none!important}
+.gate-card{background:var(--s);border:1px solid var(--border);border-radius:12px;padding:38px 34px 32px;max-width:420px;width:100%;box-shadow:var(--sh-md)}
+.gate-eyebrow{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--accent);margin-bottom:8px}
+.gate-title{font-size:21px;font-weight:700;letter-spacing:-.3px;margin-bottom:7px}
+.gate-sub{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:24px}
+.gate-sub a{color:var(--accent);text-decoration:none;font-weight:500}
+.gate-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:24px}
+.gate-step{background:var(--s2);border:1px solid var(--border);border-radius:7px;padding:11px 9px;font-size:11px;color:var(--muted);text-align:center;line-height:1.5}
+.gate-step strong{display:block;font-size:16px;font-weight:700;color:var(--text);margin-bottom:3px}
+.gate-fl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted2);margin-bottom:7px}
+.gate-input{width:100%;border:1.5px solid var(--border);border-radius:7px;padding:11px 13px;font-size:13px;font-family:var(--mono);color:var(--text);background:var(--s2);outline:none;letter-spacing:.5px;margin-bottom:8px;transition:border-color .15s,box-shadow .15s}
+.gate-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,86,219,.1);background:#fff}
+.gate-input.valid{border-color:var(--green)}.gate-input.invalid{border-color:var(--red)}
+.gate-status{font-size:12px;min-height:17px;margin-bottom:14px;color:var(--muted)}
+.gate-status.ok{color:var(--green)}.gate-status.err{color:var(--red)}
+.btn-primary{width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s}
+.btn-primary:hover{background:#1447c0}.btn-primary:disabled{background:var(--border2);color:var(--muted2);cursor:not-allowed}
 
-body {
-  font-family: var(--font);
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  font-size: 14px;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-}
+/* TOPBAR */
+.topbar{background:var(--s);border-bottom:1px solid var(--border);height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;box-shadow:var(--sh)}
+.tb-left{display:flex;align-items:center;gap:14px}
+.tb-title{font-size:15px;font-weight:700;letter-spacing:-.2px}
+.tb-sub{font-size:11px;color:var(--muted2)}
+.tb-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:var(--accent-bg);border:1px solid var(--accent-bd);border-radius:4px;font-size:11px;font-weight:600;color:var(--accent);letter-spacing:.3px}
+.tb-badge::before{content:'';width:6px;height:6px;background:var(--accent);border-radius:50%}
+.btn-link{padding:6px 13px;background:none;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;font-family:var(--font);transition:all .15s}
+.btn-link:hover{border-color:var(--border2);color:var(--text)}
 
-/* ── API GATE ── */
-.gate {
-  position: fixed; inset: 0;
-  background: linear-gradient(135deg, #f0fdf4, #f5f3ff);
-  z-index: 9000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  transition: opacity 0.3s;
-}
-.gate.hide   { opacity: 0; pointer-events: none; }
-.gate.hidden { display: none !important; }
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:360px 1fr;gap:16px;max-width:1160px;margin:0 auto;padding:20px 20px 72px;align-items:start}
 
-.gate-card {
-  background: var(--s);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 36px 32px 28px;
-  max-width: 440px;
-  width: 100%;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
-  text-align: center;
-}
+/* CARD */
+.card{background:var(--s);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.card-head{padding:10px 16px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);display:flex;align-items:center;justify-content:space-between}
+.card-body{padding:14px 16px}
+.field{margin-bottom:12px}.field:last-child{margin-bottom:0}
+.field-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);margin-bottom:6px}
+.paste-box{width:100%;border:1px solid var(--border);border-radius:7px;padding:10px 12px;font-family:var(--font);font-size:13px;color:var(--text);background:var(--s2);resize:vertical;outline:none;min-height:76px;line-height:1.55;transition:border-color .15s,box-shadow .15s}
+.paste-box:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,86,219,.08);background:#fff}
 
-.gate-icon {
-  width: 64px; height: 64px;
-  background: linear-gradient(135deg, #dcfce7, #f0fdf4);
-  border: 2px solid #bbf7d0;
-  border-radius: 16px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 28px;
-  margin-bottom: 16px;
-}
+/* TOGGLES */
+.toggle-group{display:flex;flex-wrap:wrap;gap:6px}
+.tgl-btn{padding:5px 13px;border-radius:5px;border:1px solid var(--border2);background:var(--s);color:var(--muted);font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);transition:all .13s}
+.tgl-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.tgl-btn.st-np{background:var(--accent-bg);color:var(--accent);border-color:var(--accent-bd);font-weight:600}
+.tgl-btn.st-cd{background:var(--green-bg);color:var(--green);border-color:var(--green-bd);font-weight:600}
+.tgl-btn.tone-on{background:var(--text);color:#fff;border-color:var(--text);font-weight:600}
+.tgl-btn.psy-on{background:var(--purple-bg);color:var(--purple);border-color:var(--purple-bd);font-weight:700}
 
-.gate-title { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 6px; }
-.gate-sub   { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
-.gate-sub a { color: var(--wa-dark); font-weight: 600; text-decoration: none; }
+/* KB */
+.kb-chips{display:flex;flex-wrap:wrap;gap:5px}
+.kb-chip{padding:3px 9px;background:var(--s2);border:1px solid var(--border);border-radius:4px;font-size:10px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.4px}
+.kb-chip.hit{background:var(--green-bg);border-color:var(--green-bd);color:var(--green)}
 
-.gate-steps {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-  margin-bottom: 20px;
-}
-.gate-step {
-  flex: 1;
-  background: var(--s2);
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  padding: 10px 8px;
-  font-size: 11px;
-  color: var(--muted);
-}
-.gate-step strong { display: block; font-size: 14px; color: var(--text); margin-bottom: 2px; }
+/* ACTION ROW */
+.action-row{display:flex;gap:8px;margin-top:14px}
+.btn-generate{flex:1;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer;transition:background .15s,transform .1s;display:flex;align-items:center;justify-content:center;gap:7px}
+.btn-generate:hover{background:#1447c0}.btn-generate:active{transform:scale(.99)}
+.btn-generate:disabled{background:var(--border2);color:var(--muted2);cursor:not-allowed;transform:none}
+.btn-secondary{padding:12px 16px;background:var(--s);border:1px solid var(--border2);border-radius:8px;font-size:13px;font-weight:600;font-family:var(--font);color:var(--muted);cursor:pointer;transition:all .14s;white-space:nowrap}
+.btn-secondary:hover{border-color:var(--text);color:var(--text);background:var(--s2)}
 
-.gate-input-row {
-  width: 100%;
-  display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-.gate-input {
-  flex: 1;
-  border: 1.5px solid var(--border);
-  border-radius: 9px;
-  padding: 11px 14px;
-  font-size: 13px;
-  font-family: var(--mono);
-  color: var(--text);
-  background: var(--s2);
-  outline: none;
-  letter-spacing: 0.5px;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-.gate-input:focus { border-color: var(--wa-dark); box-shadow: 0 0 0 3px rgba(18,140,126,0.1); }
-.gate-input.valid { border-color: var(--wa); }
-.gate-input.invalid { border-color: var(--red); }
+/* OUTPUT */
+.output-panel{display:flex;flex-direction:column;gap:12px}
+.empty-state{padding:56px 24px;text-align:center}
+.empty-state h3{font-size:15px;font-weight:600;color:var(--text);margin-bottom:8px}
+.empty-state p{font-size:13px;color:var(--muted);line-height:1.65;max-width:280px;margin:0 auto}
 
-.gate-status { font-size: 12px; width: 100%; text-align: left; min-height: 18px; margin-bottom: 14px; color: var(--muted); }
-.gate-status.ok  { color: var(--wa-dark); }
-.gate-status.err { color: var(--red); }
+/* INTEL */
+.intel-card{background:var(--s);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;animation:fadeUp .2s ease}
+.intel-head{padding:10px 16px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);display:flex;align-items:center;justify-content:space-between}
+.sp{padding:2px 9px;border-radius:4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.sp-hot{background:#fee2e2;color:var(--red)}.sp-warm{background:var(--amber-bg);color:var(--amber)}.sp-cold{background:var(--accent-bg);color:var(--accent)}
+.intel-grid{display:grid;grid-template-columns:repeat(3,1fr)}
+.intel-cell{padding:12px 16px;border-right:1px solid var(--border)}.intel-cell:last-child{border-right:none}
+.ic-l{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted2);margin-bottom:4px}
+.ic-v{font-size:13px;font-weight:600;color:var(--text)}
+.ic-s{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.45}
+.score-track{height:4px;background:var(--border);border-radius:2px;margin-top:6px;overflow:hidden}
+.score-fill{height:100%;border-radius:2px;transition:width .5s ease}
+.sf-hot{background:var(--red)}.sf-warm{background:#d97706}.sf-cold{background:var(--accent)}
+.reb-sect{padding:12px 16px;border-top:1px solid var(--border)}
+.reb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);margin-bottom:8px}
+.reb-item{padding:8px 12px;background:var(--s2);border:1px solid var(--border);border-left:3px solid var(--accent-bd);border-radius:6px;font-size:12px;color:var(--text);margin-bottom:6px;line-height:1.5}
+.reb-item:last-child{margin-bottom:0}
 
-.btn-gate {
-  width: 100%;
-  padding: 13px;
-  background: var(--wa-dark);
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 700;
-  font-family: var(--font);
-  cursor: pointer;
-  transition: background 0.15s;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-}
-.btn-gate:hover    { background: #0f6b5f; }
-.btn-gate:disabled { background: #d1d5db; color: #9ca3af; cursor: not-allowed; }
+/* COPY ALL */
+.btn-copy-all{width:100%;padding:11px;background:var(--s);border:1px solid var(--border2);border-radius:8px;font-size:13px;font-weight:600;font-family:var(--font);color:var(--muted);cursor:pointer;transition:all .14s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-copy-all:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.btn-copy-all.copied{border-color:var(--green);color:var(--green);background:var(--green-bg)}
 
-/* ── TOPBAR ── */
-.topbar {
-  background: var(--s);
-  border-bottom: 1px solid var(--border);
-  height: 54px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: var(--shadow);
-}
-.tb-left { display: flex; align-items: center; gap: 10px; }
-.tb-logo {
-  width: 32px; height: 32px;
-  background: var(--wa);
-  border-radius: 9px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 16px;
-}
-.tb-title { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; }
-.tb-sub   { font-size: 11px; color: var(--muted); margin-top: 1px; }
-.tb-key-badge {
-  font-size: 11px;
-  padding: 4px 10px;
-  background: var(--green-bg);
-  color: var(--green);
-  border-radius: 20px;
-  font-weight: 600;
-  border: 1px solid #bbf7d0;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.tb-key-badge:hover { background: #bbf7d0; }
+/* MSG CARD */
+.msg-card{background:var(--s);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;animation:fadeUp .18s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.msg-head{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;background:var(--s2)}
+.msg-num{width:22px;height:22px;background:var(--text);color:#fff;border-radius:5px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--mono)}
+.msg-label{font-size:12px;font-weight:600;color:var(--text);flex:1}
+.psy-tag{padding:2px 8px;background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-bd);border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.tone-tag{padding:2px 8px;background:var(--s2);color:var(--muted);border:1px solid var(--border2);border-radius:4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.msg-body{padding:16px;font-size:14px;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word;border-bottom:1px solid var(--border)}
+.msg-footer{padding:9px 12px;display:flex;align-items:center;justify-content:flex-end}
+.btn-copy-msg{padding:6px 14px;background:var(--s2);border:1px solid var(--border2);border-radius:6px;font-size:12px;font-weight:600;font-family:var(--font);color:var(--muted);cursor:pointer;transition:all .13s}
+.btn-copy-msg:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.btn-copy-msg.copied{border-color:var(--green);color:var(--green);background:var(--green-bg)}
 
-/* ── LAYOUT ── */
-.layout {
-  display: grid;
-  grid-template-columns: 380px 1fr;
-  gap: 16px;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 20px 16px 60px;
-  align-items: start;
-}
+/* TOAST */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--text);color:#fff;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:9999;transition:transform .22s ease,opacity .22s;opacity:0;white-space:nowrap;max-width:90vw}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.success{background:var(--green)}.toast.error{background:var(--red)}
+.spin{width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite;display:inline-block;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-/* ── CARD ── */
-.card {
-  background: var(--s);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-}
-.card-head {
-  padding: 14px 16px 11px;
-  border-bottom: 1px solid var(--border);
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.7px;
-  color: var(--muted);
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-.card-head::before {
-  content: '';
-  width: 3px; height: 14px;
-  background: var(--wa-dark);
-  border-radius: 2px;
-}
-.card-body { padding: 14px 16px; }
-
-/* ── INPUTS ── */
-.field { margin-bottom: 14px; }
-.field:last-child { margin-bottom: 0; }
-.field-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--muted2);
-  margin-bottom: 6px;
-}
-.paste-box {
-  width: 100%;
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 12px;
-  font-family: var(--font);
-  font-size: 13px;
-  color: var(--text);
-  background: var(--s2);
-  resize: vertical;
-  outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
-  min-height: 80px;
-  line-height: 1.5;
-}
-.paste-box:focus {
-  border-color: var(--wa-dark);
-  box-shadow: 0 0 0 3px rgba(18,140,126,0.08);
-  background: #fff;
-}
-
-/* ── TOGGLE BUTTONS ── */
-.toggle-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.tgl-btn {
-  padding: 6px 13px;
-  border-radius: 20px;
-  border: 1.5px solid var(--border);
-  background: var(--s);
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: var(--font);
-  transition: all 0.15s;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.tgl-btn:hover { border-color: var(--wa-dark); color: var(--wa-dark); background: #f0fdf4; }
-
-/* Status */
-.tgl-btn.active-np  { background: #eff6ff; color: #1d4ed8; border-color: #93c5fd; }
-.tgl-btn.active-cp  { background: #dcfce7; color: var(--green); border-color: #86efac; }
-/* Tone */
-.tgl-btn.active-tone { background: var(--wa-dark); color: #fff; border-color: var(--wa-dark); }
-/* Psychology */
-.tgl-btn.active-psy { background: var(--purple); color: #fff; border-color: var(--purple); }
-.tgl-btn.active-psy::after { content: '✓'; font-size: 10px; opacity: 0.8; }
-
-/* ── GENERATE BUTTON ── */
-.btn-generate {
-  width: 100%;
-  padding: 13px;
-  background: var(--wa-dark);
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 700;
-  font-family: var(--font);
-  cursor: pointer;
-  transition: background 0.15s, transform 0.1s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 14px;
-}
-.btn-generate:hover  { background: #0f6b5f; }
-.btn-generate:active { transform: scale(0.99); }
-.btn-generate:disabled { background: #d1d5db; color: #9ca3af; cursor: not-allowed; transform: none; }
-
-/* ── KNOWLEDGE BASE ── */
-.kb-chips { display: flex; flex-wrap: wrap; gap: 5px; }
-.kb-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 9px;
-  background: var(--s2);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  font-size: 10px;
-  color: var(--muted);
-  font-weight: 600;
-  letter-spacing: 0.2px;
-  text-transform: uppercase;
-}
-.kb-chip.hit {
-  background: rgba(18,140,126,0.08);
-  border-color: rgba(18,140,126,0.25);
-  color: var(--wa-dark);
-}
-
-/* ── OUTPUT PANEL ── */
-.output-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.empty-state {
-  padding: 60px 24px;
-  text-align: center;
-  color: var(--muted);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-.empty-icon { font-size: 36px; }
-.empty-state h3 { font-size: 15px; color: var(--text); font-weight: 600; }
-.empty-state p  { font-size: 13px; max-width: 260px; line-height: 1.6; }
-
-/* Message card */
-.msg-card {
-  background: var(--s);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  overflow: hidden;
-  box-shadow: var(--shadow);
-  animation: slideIn 0.2s ease;
-}
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.msg-card-head {
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--s2);
-}
-.msg-num {
-  width: 24px; height: 24px;
-  background: var(--wa-dark);
-  color: #fff;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.msg-label { font-size: 12px; font-weight: 700; color: var(--text); flex: 1; }
-.psy-tag {
-  padding: 2px 8px;
-  border-radius: 5px;
-  font-size: 10px;
-  font-weight: 600;
-  background: var(--purple-bg);
-  color: var(--purple);
-  border: 1px solid #ddd6fe;
-}
-.tone-tag {
-  padding: 2px 8px;
-  border-radius: 5px;
-  font-size: 10px;
-  font-weight: 600;
-  background: var(--green-bg);
-  color: var(--green);
-  border: 1px solid #bbf7d0;
-}
-
-/* WhatsApp bubble */
-.wa-area {
-  padding: 12px 14px 8px;
-  background: #e5ddd5;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='30' r='1' fill='rgba(0,0,0,0.03)'/%3E%3C/svg%3E");
-}
-.wa-sender { font-size: 10px; font-weight: 700; color: var(--wa-dark); margin-bottom: 4px; }
-.wa-bubble {
-  display: inline-block;
-  background: #fff;
-  border-radius: 0 10px 10px 10px;
-  padding: 9px 13px;
-  max-width: 88%;
-  font-size: 13px;
-  line-height: 1.6;
-  color: #1a3320;
-  white-space: pre-wrap;
-  word-break: break-word;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-  position: relative;
-}
-.wa-bubble::before {
-  content: '';
-  position: absolute;
-  top: 0; left: -7px;
-  border: 7px solid transparent;
-  border-top-color: #fff;
-  border-left: 0;
-}
-.wa-tick { font-size: 10px; color: #999; text-align: right; margin-top: 4px; }
-
-.msg-actions {
-  display: flex;
-  gap: 6px;
-  padding: 9px 12px;
-  border-top: 1px solid var(--border);
-  background: var(--s);
-}
-.btn-copy, .btn-wa {
-  flex: 1;
-  padding: 8px;
-  border-radius: 7px;
-  font-size: 12px;
-  font-weight: 600;
-  font-family: var(--font);
-  cursor: pointer;
-  transition: all 0.15s;
-  display: flex; align-items: center; justify-content: center; gap: 5px;
-}
-.btn-copy {
-  background: var(--s2);
-  border: 1px solid var(--border);
-  color: var(--muted);
-}
-.btn-copy:hover { border-color: var(--wa-dark); color: var(--wa-dark); }
-.btn-wa {
-  background: var(--wa);
-  border: none;
-  color: #fff;
-  text-decoration: none;
-}
-.btn-wa:hover { background: #1da851; }
-
-/* Intelligence card */
-.intel-card {
-  background: var(--s);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  overflow: hidden;
-  box-shadow: var(--shadow);
-  animation: slideIn 0.2s ease;
-}
-.intel-head {
-  padding: 11px 14px;
-  background: var(--s2);
-  border-bottom: 1px solid var(--border);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.intel-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-}
-.intel-cell {
-  padding: 11px 14px;
-  border-right: 1px solid var(--border);
-}
-.intel-cell:last-child { border-right: none; }
-.intel-cell-l { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted2); margin-bottom: 4px; }
-.intel-cell-v { font-size: 13px; font-weight: 600; color: var(--text); }
-.intel-cell-s { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
-
-.sentiment-hot  { color: #be123c; }
-.sentiment-warm { color: var(--amber); }
-.sentiment-cold { color: #1d4ed8; }
-
-.score-track {
-  height: 5px; border-radius: 3px;
-  background: var(--border);
-  margin-top: 5px;
-  overflow: hidden;
-}
-.score-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
-.score-fill.hot  { background: #ef4444; }
-.score-fill.warm { background: #f59e0b; }
-.score-fill.cold { background: #3b82f6; }
-
-.rebuttal-section {
-  padding: 11px 14px;
-  border-top: 1px solid var(--border);
-}
-.rebuttal-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted2); margin-bottom: 7px; }
-.rebuttal-item {
-  padding: 7px 10px;
-  background: var(--s2);
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  font-size: 12px;
-  color: var(--text);
-  margin-bottom: 5px;
-  display: flex; align-items: flex-start; gap: 6px;
-  line-height: 1.45;
-}
-.rebuttal-item:last-child { margin-bottom: 0; }
-.rebuttal-item::before { content: '💬'; flex-shrink: 0; }
-
-/* ── TOAST ── */
-.toast {
-  position: fixed;
-  bottom: 24px; left: 50%;
-  transform: translateX(-50%) translateY(80px);
-  background: #1f2937;
-  color: #fff;
-  padding: 10px 20px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 500;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-  z-index: 9999;
-  transition: transform 0.25s ease, opacity 0.25s;
-  opacity: 0;
-  white-space: nowrap;
-  max-width: 90vw;
-}
-.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-.toast.error   { background: #dc2626; }
-.toast.success { background: #16a34a; }
-
-/* Spinner */
-.spin {
-  width: 14px; height: 14px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-  display: inline-block;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── MOBILE ── */
-@media (max-width: 760px) {
-  .layout { grid-template-columns: 1fr; padding: 12px 10px 60px; }
-  .gate-card { padding: 24px 18px 20px; }
-  .intel-grid { grid-template-columns: 1fr 1fr; }
-  .intel-cell:nth-child(2) { border-right: none; }
-  .intel-cell:nth-child(3) { border-top: 1px solid var(--border); grid-column: 1 / -1; border-right: none; }
+@media(max-width:800px){
+  .layout{grid-template-columns:1fr;padding:12px 12px 60px;gap:12px}
+  .topbar{padding:0 14px}
+  .intel-grid{grid-template-columns:1fr 1fr}
+  .intel-cell:nth-child(2){border-right:none}
+  .intel-cell:nth-child(3){border-top:1px solid var(--border);border-right:none;grid-column:1/-1}
+  .action-row{flex-wrap:wrap}
+  .btn-secondary{flex:1;justify-content:center;text-align:center}
 }
 </style>
 </head>
 <body>
 
-<!-- ── API GATE ── -->
 <div class="gate" id="gate">
   <div class="gate-card">
-    <div class="gate-icon">🤖</div>
-    <div class="gate-title">CRM Follow-up AI Agent</div>
-    <div class="gate-sub">
-      Powered by Groq · Get your free key at
-      <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a>
-    </div>
+    <div class="gate-eyebrow">CRM Follow-up AI Agent</div>
+    <div class="gate-title">Connect Your Groq API Key</div>
+    <div class="gate-sub">Powered by Groq LLaMA 3.3. Get your free key at <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a></div>
     <div class="gate-steps">
       <div class="gate-step"><strong>1</strong>Visit Groq Console</div>
       <div class="gate-step"><strong>2</strong>Create API Key</div>
-      <div class="gate-step"><strong>3</strong>Paste &amp; Start</div>
+      <div class="gate-step"><strong>3</strong>Paste Below</div>
     </div>
-    <div class="gate-input-row">
-      <input type="password" class="gate-input" id="gate-key-input"
-        placeholder="gsk_xxxxxxxxxxxxxxxxxxxx"
-        autocomplete="off" oninput="onGateKeyInput(this)" />
-    </div>
+    <div class="gate-fl">Your Groq API Key</div>
+    <input type="password" class="gate-input" id="gate-key" placeholder="gsk_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" oninput="onGateInput(this)"/>
     <div class="gate-status" id="gate-status"></div>
-    <button class="btn-gate" id="btn-gate" onclick="saveGateKey()" disabled>
-      <span id="gate-btn-inner">Start Agent →</span>
+    <button class="btn-primary" id="btn-gate" onclick="saveKey()" disabled>
+      <span id="gate-inner">Save and Continue</span>
     </button>
   </div>
 </div>
 
-<!-- ── TOPBAR ── -->
 <header class="topbar">
   <div class="tb-left">
-    <div class="tb-logo">🤖</div>
     <div>
       <div class="tb-title">CRM Follow-up AI Agent</div>
-      <div class="tb-sub">Groq · LLaMA 3.3 · RAG</div>
+      <div class="tb-sub">Groq LLaMA 3.3 · RAG Knowledge Base · 5 Messages</div>
     </div>
+    <div class="tb-badge">Active</div>
   </div>
-  <span class="tb-key-badge" id="key-badge" onclick="resetKey()" title="Click to change key">🔑 Key saved</span>
+  <button class="btn-link" onclick="changeKey()">Change API Key</button>
 </header>
 
-<!-- ── MAIN LAYOUT ── -->
 <div class="layout">
-
-  <!-- LEFT: INPUT PANEL -->
   <div style="display:flex;flex-direction:column;gap:12px;">
 
-    <!-- CRM Data + Call Notes -->
     <div class="card">
       <div class="card-head">Lead Data</div>
       <div class="card-body" style="display:flex;flex-direction:column;gap:12px;">
         <div class="field">
           <div class="field-label">CRM Data</div>
-          <textarea class="paste-box" id="crmData" placeholder="Paste anything from Zoho CRM — name, company, course interest, experience, CTC, contact…" style="min-height:90px;"></textarea>
+          <textarea class="paste-box" id="crmData" placeholder="Paste CRM data — name, company, designation, course interest, experience, CTC, contact number..." style="min-height:90px;"></textarea>
         </div>
         <div class="field">
           <div class="field-label">Call Notes</div>
-          <textarea class="paste-box" id="callNotes" placeholder="What happened on the call? Budget concern, interested but busy, referred to family…" style="min-height:70px;"></textarea>
+          <textarea class="paste-box" id="callNotes" placeholder="Call outcome — interest level, objections, budget concerns, callback requested..." style="min-height:68px;"></textarea>
         </div>
       </div>
     </div>
 
-    <!-- Status -->
     <div class="card">
       <div class="card-head">Lead Status</div>
       <div class="card-body">
-        <div class="toggle-group" id="status-group">
-          <button class="tgl-btn active-np" data-val="not-picked" onclick="pick('status',this)">📵 Not Picked</button>
-          <button class="tgl-btn" data-val="call-done" onclick="pick('status',this)">✅ Call Done</button>
+        <div class="toggle-group" id="status-grp">
+          <button class="tgl-btn st-np" data-v="not-picked" onclick="pickStatus(this)">Not Picked</button>
+          <button class="tgl-btn" data-v="call-done" onclick="pickStatus(this)">Call Done</button>
         </div>
       </div>
     </div>
 
-    <!-- Tone -->
     <div class="card">
       <div class="card-head">Message Tone</div>
       <div class="card-body">
-        <div class="toggle-group" id="tone-group">
-          <button class="tgl-btn active-tone" data-val="Professional" onclick="pick('tone',this)">💼 Professional</button>
-          <button class="tgl-btn" data-val="Friendly"     onclick="pick('tone',this)">😊 Friendly</button>
-          <button class="tgl-btn" data-val="Direct"       onclick="pick('tone',this)">⚡ Direct</button>
-          <button class="tgl-btn" data-val="Empathetic"   onclick="pick('tone',this)">💛 Empathetic</button>
-          <button class="tgl-btn" data-val="Conversational" onclick="pick('tone',this)">💬 Conversational</button>
+        <div class="toggle-group" id="tone-grp">
+          <button class="tgl-btn tone-on" data-v="Professional" onclick="pickTone(this)">Professional</button>
+          <button class="tgl-btn" data-v="Friendly" onclick="pickTone(this)">Friendly</button>
+          <button class="tgl-btn" data-v="Direct" onclick="pickTone(this)">Direct</button>
+          <button class="tgl-btn" data-v="Empathetic" onclick="pickTone(this)">Empathetic</button>
+          <button class="tgl-btn" data-v="Conversational" onclick="pickTone(this)">Conversational</button>
         </div>
       </div>
     </div>
 
-    <!-- Psychology -->
     <div class="card">
-      <div class="card-head">Psychology Trigger</div>
+      <div class="card-head">
+        <span>Psychology Triggers</span>
+        <span style="font-size:10px;font-weight:500;color:var(--muted2);text-transform:none;letter-spacing:0;">Select multiple — rotated across 5 messages</span>
+      </div>
       <div class="card-body">
-        <div class="toggle-group" id="psy-group">
-          <button class="tgl-btn active-psy" data-val="Fear"        onclick="pick('psy',this)">😨 Fear</button>
-          <button class="tgl-btn" data-val="Greed"       onclick="pick('psy',this)">💰 Greed</button>
-          <button class="tgl-btn" data-val="Authority"   onclick="pick('psy',this)">🎯 Authority</button>
-          <button class="tgl-btn" data-val="Social Proof" onclick="pick('psy',this)">👥 Social Proof</button>
-          <button class="tgl-btn" data-val="Urgency"     onclick="pick('psy',this)">⏰ Urgency</button>
-          <button class="tgl-btn" data-val="Logic"       onclick="pick('psy',this)">🧠 Logic</button>
-          <button class="tgl-btn" data-val="Emotional"   onclick="pick('psy',this)">❤️ Emotional</button>
-          <button class="tgl-btn" data-val="Mentor"      onclick="pick('psy',this)">🌟 Mentor</button>
+        <div class="toggle-group" id="psy-grp">
+          <button class="tgl-btn psy-on" data-v="Fear" onclick="togglePsy(this)">Fear</button>
+          <button class="tgl-btn" data-v="Greed" onclick="togglePsy(this)">Greed</button>
+          <button class="tgl-btn" data-v="Authority" onclick="togglePsy(this)">Authority</button>
+          <button class="tgl-btn" data-v="Social Proof" onclick="togglePsy(this)">Social Proof</button>
+          <button class="tgl-btn" data-v="Urgency" onclick="togglePsy(this)">Urgency</button>
+          <button class="tgl-btn" data-v="Logic" onclick="togglePsy(this)">Logic</button>
+          <button class="tgl-btn" data-v="Emotional" onclick="togglePsy(this)">Emotional</button>
+          <button class="tgl-btn" data-v="Mentor" onclick="togglePsy(this)">Mentor</button>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--muted2);">
+          Active: <span id="psy-label" style="color:var(--purple);font-weight:600;">Fear</span>
+          <span> — triggers rotate across messages 1 to 5</span>
         </div>
       </div>
     </div>
 
-    <!-- RAG Knowledge Base -->
     <div class="card">
       <div class="card-head">RAG Knowledge Base</div>
       <div class="card-body">
-        <div class="field-label" style="margin-bottom:8px;">Auto-matched from your lead data</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Topics auto-matched from lead data</div>
         <div class="kb-chips" id="kb-chips"></div>
       </div>
     </div>
 
-    <!-- Generate -->
-    <button class="btn-generate" id="btn-generate" onclick="runAgent()">
-      <span id="gen-inner">⚡ Generate Follow-up Messages</span>
-    </button>
+    <div class="action-row">
+      <button class="btn-generate" id="btn-gen" onclick="runAgent()">
+        <span id="gen-inner">Generate 5 Messages</span>
+      </button>
+      <button class="btn-secondary" onclick="nextLead()">Next Lead</button>
+      <button class="btn-secondary" onclick="refreshMsgs()">Refresh</button>
+    </div>
   </div>
 
-  <!-- RIGHT: OUTPUT PANEL -->
   <div class="output-panel" id="output-panel">
     <div class="card">
       <div class="empty-state">
-        <div class="empty-icon">💬</div>
-        <h3>Messages will appear here</h3>
-        <p>Fill in the lead data, pick your tone and psychology trigger, then click Generate.</p>
+        <h3>No messages generated yet</h3>
+        <p>Paste lead data and call notes, select tone and psychology triggers, then click Generate.</p>
       </div>
     </div>
   </div>
@@ -710,376 +271,147 @@ body {
 <div class="toast" id="toast"></div>
 
 <script>
-/* ═══════════════════════════════════════
-   STATE
-═══════════════════════════════════════ */
-let API_KEY        = sessionStorage.getItem('crm_groq_key') || '';
-let selectedStatus = 'not-picked';
-let selectedTone   = 'Professional';
-let selectedPsy    = 'Fear';
+let API_KEY=sessionStorage.getItem('crm_groq_key')||'';
+let selStatus='not-picked',selTone='Professional',selPsy=new Set(['Fear']);
+let allMessages=[],allTriggers=[];
 
-/* ═══════════════════════════════════════
-   KNOWLEDGE BASE (RAG)
-═══════════════════════════════════════ */
-const KB = [
-  { topic: 'selenium',   label: 'Selenium',   content: 'Selenium course includes Java, TestNG, Frameworks, Jenkins CI/CD and a live industry project with placement support.' },
-  { topic: 'playwright', label: 'Playwright',  content: 'Playwright covers TypeScript, API testing, end-to-end framework design and full CI/CD pipeline integration.' },
-  { topic: 'fee',        label: 'Fee/Cost',    content: 'Most students recover the full course fee within 3 months of their first salary hike after placement.' },
-  { topic: 'placement',  label: 'Placement',   content: 'We provide mock interview prep, resume building, LinkedIn optimisation and direct recruiter referrals.' },
-  { topic: 'manual',     label: 'Manual',      content: 'Manual testing roles are rapidly declining. Automation skills are now a baseline requirement for most QA jobs.' },
-  { topic: 'career',     label: 'Career',      content: 'Automation and AI testing skills can increase your salary by 40–80% and unlock senior/lead positions faster.' },
-  { topic: 'automation', label: 'Automation',  content: 'Automation testing engineers are among the highest-demand profiles in product companies and MNCs right now.' },
-  { topic: 'salary',     label: 'Salary',      content: 'Freshers with automation skills start at ₹4–6 LPA. Experienced QA with automation gets ₹10–18 LPA easily.' },
-  { topic: 'python',     label: 'Python',      content: 'Python-based automation is used heavily in AI/ML testing. Learning Python + Selenium opens global opportunities.' },
-  { topic: 'interview',  label: 'Interview',   content: 'We provide 30+ mock interviews, top company question banks and one-on-one mentoring until you get placed.' },
+const KB=[
+  {t:'selenium',l:'Selenium',c:'Selenium course covers Java, TestNG, Page Object Model, Jenkins CI/CD and a live industry project with end-to-end placement support.'},
+  {t:'playwright',l:'Playwright',c:'Playwright training includes TypeScript, API testing, cross-browser automation, framework design and full CI/CD pipeline integration.'},
+  {t:'fee',l:'Fee / Cost',c:'Most students fully recover the course investment within 60 to 90 days through salary increments after placement.'},
+  {t:'placement',l:'Placement',c:'Placement support includes mock interview coaching, resume building, LinkedIn profile review and direct recruiter referrals.'},
+  {t:'manual',l:'Manual QA',c:'Manual testing roles are declining sharply. Employers now treat automation as a baseline requirement for any QA position.'},
+  {t:'career',l:'Career',c:'Automation and AI testing skills accelerate career growth by 40 to 80 percent in salary and unlock senior or lead positions faster.'},
+  {t:'automation',l:'Automation',c:'Automation testing engineers are among the highest-demand profiles across product companies and MNCs in India and globally.'},
+  {t:'salary',l:'Salary',c:'Freshers with automation skills earn 4 to 6 LPA. Experienced QA with automation expertise commands 10 to 18 LPA.'},
+  {t:'python',l:'Python',c:'Python-based automation is widely used in AI and ML testing pipelines, opening global opportunities in product companies.'},
+  {t:'interview',l:'Interviews',c:'The program includes 30 or more mock interviews, a curated question bank from top companies and one-on-one mentoring until placed.'},
 ];
 
-function retrieveKnowledge(text) {
-  const t = text.toLowerCase();
-  return KB.filter(k => t.includes(k.topic));
-}
+function kbMatch(text){const t=text.toLowerCase();return KB.filter(k=>t.includes(k.t));}
+function renderKB(hits){const s=new Set(hits.map(h=>h.t));document.getElementById('kb-chips').innerHTML=KB.map(k=>`<span class="kb-chip ${s.has(k.t)?'hit':''}">${k.l}</span>`).join('');}
+['crmData','callNotes'].forEach(id=>{document.getElementById(id).addEventListener('input',()=>{renderKB(kbMatch(document.getElementById('crmData').value+' '+document.getElementById('callNotes').value));});});
 
-function renderKBChips(hits) {
-  const wrap = document.getElementById('kb-chips');
-  wrap.innerHTML = KB.map(k => {
-    const isHit = hits.find(h => h.topic === k.topic);
-    return `<span class="kb-chip ${isHit ? 'hit' : ''}">${isHit ? '✓ ' : ''}${k.label}</span>`;
-  }).join('');
-}
+function pickStatus(btn){document.querySelectorAll('#status-grp .tgl-btn').forEach(b=>b.className='tgl-btn');btn.classList.add(btn.dataset.v==='not-picked'?'st-np':'st-cd');selStatus=btn.dataset.v;}
+function pickTone(btn){document.querySelectorAll('#tone-grp .tgl-btn').forEach(b=>b.className='tgl-btn');btn.classList.add('tone-on');selTone=btn.dataset.v;}
+function togglePsy(btn){const v=btn.dataset.v;if(selPsy.has(v)){if(selPsy.size===1)return;selPsy.delete(v);btn.classList.remove('psy-on');}else{selPsy.add(v);btn.classList.add('psy-on');}document.getElementById('psy-label').textContent=[...selPsy].join(', ');}
 
-// Live KB update as user types
-['crmData','callNotes'].forEach(id => {
-  document.getElementById(id).addEventListener('input', () => {
-    const text = document.getElementById('crmData').value + ' ' + document.getElementById('callNotes').value;
-    renderKBChips(retrieveKnowledge(text));
-  });
-});
+function onGateInput(el){const v=el.value.trim(),st=document.getElementById('gate-status'),btn=document.getElementById('btn-gate');if(!v){el.className='gate-input';st.textContent='';btn.disabled=true;return;}if(v.startsWith('gsk_')&&v.length>20){el.className='gate-input valid';st.textContent='Format valid — click Save to continue';st.className='gate-status ok';btn.disabled=false;}else{el.className='gate-input invalid';st.textContent='Groq keys start with gsk_ and are longer than 20 characters';st.className='gate-status err';btn.disabled=true;}}
+function saveKey(){const v=document.getElementById('gate-key').value.trim();if(!v.startsWith('gsk_')||v.length<20)return;API_KEY=v;sessionStorage.setItem('crm_groq_key',v);const g=document.getElementById('gate');g.classList.add('hide');setTimeout(()=>g.classList.add('hidden'),350);showToast('API key saved','success');}
+function changeKey(){sessionStorage.removeItem('crm_groq_key');API_KEY='';const g=document.getElementById('gate');g.classList.remove('hidden','hide');document.getElementById('gate-key').value='';document.getElementById('gate-status').textContent='';document.getElementById('btn-gate').disabled=true;}
+window.addEventListener('DOMContentLoaded',()=>{renderKB([]);if(API_KEY&&API_KEY.startsWith('gsk_')&&API_KEY.length>20){const g=document.getElementById('gate');g.classList.add('hide');setTimeout(()=>g.classList.add('hidden'),100);}});
 
-/* ═══════════════════════════════════════
-   TOGGLE BUTTONS
-═══════════════════════════════════════ */
-function pick(type, btn) {
-  if (type === 'status') {
-    document.querySelectorAll('#status-group .tgl-btn').forEach(b => b.className = 'tgl-btn');
-    btn.classList.add(btn.dataset.val === 'not-picked' ? 'active-np' : 'active-cp');
-    selectedStatus = btn.dataset.val;
-  } else if (type === 'tone') {
-    document.querySelectorAll('#tone-group .tgl-btn').forEach(b => b.className = 'tgl-btn');
-    btn.classList.add('active-tone');
-    selectedTone = btn.dataset.val;
-  } else if (type === 'psy') {
-    document.querySelectorAll('#psy-group .tgl-btn').forEach(b => b.className = 'tgl-btn');
-    btn.classList.add('active-psy');
-    selectedPsy = btn.dataset.val;
-  }
-}
+function nextLead(){document.getElementById('crmData').value='';document.getElementById('callNotes').value='';allMessages=[];allTriggers=[];renderKB([]);document.getElementById('output-panel').innerHTML='<div class="card"><div class="empty-state"><h3>Ready for next lead</h3><p>Paste the new lead data and call notes, then click Generate.</p></div></div>';document.getElementById('crmData').focus();showToast('Cleared for next lead','');}
+function refreshMsgs(){if(!document.getElementById('crmData').value.trim()){showToast('No lead data — paste CRM data first','error');return;}runAgent();}
 
-/* ═══════════════════════════════════════
-   API GATE
-═══════════════════════════════════════ */
-function onGateKeyInput(el) {
-  const val = el.value.trim();
-  const status = document.getElementById('gate-status');
-  const btn    = document.getElementById('btn-gate');
-  if (!val) {
-    el.className = 'gate-input'; status.textContent = ''; btn.disabled = true; return;
-  }
-  if (val.startsWith('gsk_') && val.length > 20) {
-    el.className = 'gate-input valid';
-    status.textContent = '✓ Format looks valid — click Start to continue';
-    status.className = 'gate-status ok';
-    btn.disabled = false;
-  } else {
-    el.className = 'gate-input invalid';
-    status.textContent = 'Groq keys start with gsk_ and are longer than 20 chars';
-    status.className = 'gate-status err';
-    btn.disabled = true;
-  }
-}
+const TONE_MAP={Professional:'Polished, credible, business-professional. Formal but not cold.',Friendly:'Warm, approachable, peer-like. Easy to read, not pushy.',Direct:'Short, punchy, no filler. Get to the point immediately.',Empathetic:'Acknowledge their situation before presenting value. Lead with understanding.',Conversational:'Natural text message style. Casual, human, zero formality.'};
+const PSY_MAP={Fear:'Highlight what the lead risks losing or missing by not acting now.',Greed:'Show the financial gain, ROI, or career upside they stand to achieve.',Authority:'Position the advisor and course as the trusted expert with proven outcomes.','Social Proof':'Reference peers in similar situations who succeeded through this program.',Urgency:'Create a real time-based or seat-based constraint that makes delay costly.',Logic:'Use numbers, ROI calculations, and structured reasoning to make the decision clear.',Emotional:'Connect to deeper aspirations — family stability, identity, long-term security.',Mentor:'Write as a trusted guide who understands this journey. Offer insight, not pressure.'};
+const MSG_LABELS=['Build Trust','Identify Need','Present Solution','Handle Objection','Close'];
 
-function saveGateKey() {
-  const val = document.getElementById('gate-key-input').value.trim();
-  if (!val.startsWith('gsk_') || val.length < 20) return;
-  API_KEY = val;
-  sessionStorage.setItem('crm_groq_key', val);
-  const gate = document.getElementById('gate');
-  gate.classList.add('hide');
-  setTimeout(() => gate.classList.add('hidden'), 350);
-  showToast('Groq key saved ✓', 'success');
-}
+function buildPrompt(crm,notes,status,tone,psySet,hits){
+  const psyArr=[...psySet];
+  const assigns=Array.from({length:5},(_,i)=>psyArr[i%psyArr.length]);
+  const kbCtx=hits.length?'\nKNOWLEDGE BASE (use where relevant):\n'+hits.map(k=>'- '+k.c).join('\n'):'';
+  const statusNote=status==='not-picked'?'Lead has NOT answered calls. Do not reference a previous call. Approach respectfully without assuming prior contact.':'Lead has spoken with us before. Reference the previous interaction and build continuity.';
+  return `You are a senior career advisor writing professional follow-up messages for an ed-tech sales team.
 
-function resetKey() {
-  sessionStorage.removeItem('crm_groq_key');
-  API_KEY = '';
-  const gate = document.getElementById('gate');
-  gate.classList.remove('hidden', 'hide');
-  document.getElementById('gate-key-input').value = '';
-  document.getElementById('gate-status').textContent = '';
-  document.getElementById('btn-gate').disabled = true;
-}
-
-// Auto-hide gate if key exists
-window.addEventListener('DOMContentLoaded', () => {
-  renderKBChips([]);
-  if (API_KEY && API_KEY.startsWith('gsk_') && API_KEY.length > 20) {
-    const gate = document.getElementById('gate');
-    gate.classList.add('hide');
-    setTimeout(() => gate.classList.add('hidden'), 100);
-  }
-});
-
-/* ═══════════════════════════════════════
-   PROMPT BUILDER
-═══════════════════════════════════════ */
-function buildPrompt(crmData, callNotes, status, tone, psy, kbHits) {
-  const kbContext = kbHits.length
-    ? '\nRELEVANT KNOWLEDGE:\n' + kbHits.map(k => '- ' + k.content).join('\n')
-    : '';
-
-  const toneMap = {
-    Professional:   'Write in a polished, credible, business-professional tone.',
-    Friendly:       'Write in a warm, upbeat, approachable tone like a helpful peer.',
-    Direct:         'Write short, punchy, no-fluff messages. Get to the point fast.',
-    Empathetic:     'Acknowledge their situation first. Lead with understanding, not pitch.',
-    Conversational: 'Write like a real WhatsApp text — casual, natural, human. No formality.'
-  };
-
-  const psyMap = {
-    Fear:         'Trigger: FEAR — Highlight what they risk losing by not acting.',
-    Greed:        'Trigger: GREED — Show the gain, ROI, and financial upside clearly.',
-    Authority:    'Trigger: AUTHORITY — Position the course/advisor as the trusted expert.',
-    'Social Proof':'Trigger: SOCIAL PROOF — Reference peers who succeeded with this course.',
-    Urgency:      'Trigger: URGENCY — Create a real time or seat-based constraint.',
-    Logic:        'Trigger: LOGIC — Use numbers, ROI, and structured reasoning.',
-    Emotional:    'Trigger: EMOTIONAL — Connect to deeper goals: family, security, identity.',
-    Mentor:       'Trigger: MENTOR — Write as a trusted guide. Insight, not pressure.'
-  };
-
-  const statusContext = status === 'not-picked'
-    ? 'Lead has NOT picked up calls. Do not reference a previous conversation.'
-    : 'Lead has spoken with us before. Reference the previous interaction warmly.';
-
-  return `You are a senior career advisor writing WhatsApp follow-up messages for an ed-tech sales team.
-
-LEAD DATA:
-${crmData || 'Not provided'}
+LEAD CRM DATA:
+${crm||'Not provided'}
 
 CALL NOTES:
-${callNotes || 'Not provided'}
+${notes||'Not provided'}
 
-STATUS: ${statusContext}
-TONE: ${toneMap[tone] || toneMap.Professional}
-PSYCHOLOGY: ${psyMap[psy] || psyMap.Fear}
-${kbContext}
+STATUS: ${statusNote}
+TONE: ${TONE_MAP[tone]||TONE_MAP.Professional}
+${kbCtx}
 
-TASK 1 — EXTRACT these fields from the lead data (return null if not found):
-name, company, designation, course, experience_years, ctc, intent, phone
+TASK 1 — Extract: name, company, designation, course, experience_years, ctc, intent, phone (null if not found)
 
-TASK 2 — GENERATE 3 WhatsApp follow-up messages using Brian Tracy's framework:
-Message 1 → Build Trust / Break Ice
-Message 2 → Present Value / Handle Objection  
-Message 3 → Close / Call to Action
+TASK 2 — Generate exactly 5 follow-up messages.
+Message 1 — Framework: Build Trust         | Trigger: ${assigns[0]} — ${PSY_MAP[assigns[0]]}
+Message 2 — Framework: Identify Need       | Trigger: ${assigns[1]} — ${PSY_MAP[assigns[1]]}
+Message 3 — Framework: Present Solution    | Trigger: ${assigns[2]} — ${PSY_MAP[assigns[2]]}
+Message 4 — Framework: Handle Objection    | Trigger: ${assigns[3]} — ${PSY_MAP[assigns[3]]}
+Message 5 — Framework: Close               | Trigger: ${assigns[4]} — ${PSY_MAP[assigns[4]]}
 
-TASK 3 — LEAD INTELLIGENCE:
-- sentiment_score: 1–10 based on intent signals
-- sentiment_label: "Cold" | "Warm" | "Hot"
-- objection_type: "Price" | "Authority" | "Need" | "Timeline"
-- objection_summary: one sentence
-- rebuttal_hooks: exactly 2 short punchy rebuttal lines for this lead
-- optimal_day: best day for next touchpoint
-- optimal_hour: best time window
-- optimal_reason: one sentence why
+STRICT RULES:
+- No emojis anywhere in any message
+- No placeholders — use the actual name from data
+- No bullet points inside message text
+- 2 to 4 sentences per message
+- Every message must open with a completely different line
+- Apply the selected tone consistently across all 5 messages
+- Personalise using every available detail from CRM data and call notes
 
-RULES:
-- English only
-- 2–4 sentences per message
-- No placeholders like [Name] — use actual name from data
-- No bullet points inside messages
-- Each message must feel distinct — different angle, different opener
-- Personalise using every detail available
+TASK 3 — Lead intelligence:
+sentiment_score (1-10), sentiment_label (Cold/Warm/Hot), objection_type (Price/Authority/Need/Timeline),
+objection_summary (one sentence), rebuttal_hooks (exactly 2 short rebuttal lines for this lead),
+optimal_day, optimal_hour, optimal_reason
 
 RESPOND ONLY with this exact JSON — no text before or after:
-{"lead":{"name":"","company":"","designation":"","course":"","experience_years":"","ctc":"","intent":"","phone":""},"messages":["","",""],"intelligence":{"sentiment_score":5,"sentiment_label":"Warm","objection_type":"Price","objection_summary":"","rebuttal_hooks":["",""],"optimal_day":"","optimal_hour":"","optimal_reason":""}}`;
+{"lead":{"name":"","company":"","designation":"","course":"","experience_years":"","ctc":"","intent":"","phone":""},"messages":["","","","",""],"triggers":["${assigns[0]}","${assigns[1]}","${assigns[2]}","${assigns[3]}","${assigns[4]}"],"intelligence":{"sentiment_score":5,"sentiment_label":"Warm","objection_type":"Price","objection_summary":"","rebuttal_hooks":["",""],"optimal_day":"","optimal_hour":"","optimal_reason":""}}`;
 }
 
-/* ═══════════════════════════════════════
-   GROQ API
-═══════════════════════════════════════ */
-async function callGroq(prompt) {
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${API_KEY}`
-    },
-    body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      max_tokens: 2000,
-      temperature: 0.7,
-      messages: [
-        { role: 'system', content: 'You are a JSON-only API. Respond with valid JSON only. No text before or after the JSON object.' },
-        { role: 'user', content: prompt }
-      ]
-    })
-  });
-
-  const data = await res.json();
-  if (res.status === 401) throw new Error('Invalid Groq API key — please re-enter');
-  if (res.status === 429) throw new Error('Rate limit — wait a moment and try again');
-  if (!res.ok) throw new Error(data?.error?.message || `API error ${res.status}`);
-  return data.choices?.[0]?.message?.content || '';
+async function callGroq(prompt){
+  const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${API_KEY}`},body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:2500,temperature:0.7,messages:[{role:'system',content:'You are a JSON-only API. Respond with valid JSON only. No text before or after.'},{role:'user',content:prompt}]})});
+  const data=await res.json();
+  if(res.status===401)throw new Error('Invalid Groq API key — please re-enter your key');
+  if(res.status===429)throw new Error('Rate limit reached — wait a moment and try again');
+  if(!res.ok)throw new Error(data?.error?.message||`API error ${res.status}`);
+  return data.choices?.[0]?.message?.content||'';
 }
 
-function extractJSON(raw) {
-  let s = raw.replace(/```json/g,'').replace(/```/g,'').trim();
-  try { return JSON.parse(s); } catch {}
-  const a = s.indexOf('{'), b = s.lastIndexOf('}');
-  if (a !== -1 && b > a) try { return JSON.parse(s.slice(a, b+1)); } catch {}
-  return null;
+function parseJSON(raw){const s=raw.replace(/```json/g,'').replace(/```/g,'').trim();try{return JSON.parse(s);}catch{}const a=s.indexOf('{'),b=s.lastIndexOf('}');if(a!==-1&&b>a)try{return JSON.parse(s.slice(a,b+1));}catch{}return null;}
+
+async function runAgent(){
+  if(!API_KEY){showToast('Enter your Groq API key first','error');return;}
+  const crm=document.getElementById('crmData').value.trim();
+  const notes=document.getElementById('callNotes').value.trim();
+  if(!crm){showToast('Paste CRM data first','error');return;}
+  const btn=document.getElementById('btn-gen'),inn=document.getElementById('gen-inner');
+  btn.disabled=true;inn.innerHTML='<span class="spin"></span> Generating...';
+  try{
+    const hits=kbMatch(crm+' '+notes);
+    const raw=await callGroq(buildPrompt(crm,notes,selStatus,selTone,selPsy,hits));
+    const parsed=parseJSON(raw);
+    if(!parsed||!Array.isArray(parsed.messages)||parsed.messages.length<5)throw new Error('Could not parse response — please try again');
+    allMessages=parsed.messages;allTriggers=parsed.triggers||[];
+    render(parsed);showToast('5 messages generated','success');
+  }catch(e){console.error(e);showToast(e.message||'Something went wrong','error');}
+  finally{btn.disabled=false;inn.textContent='Generate 5 Messages';}
 }
 
-/* ═══════════════════════════════════════
-   MAIN AGENT
-═══════════════════════════════════════ */
-async function runAgent() {
-  if (!API_KEY) { showToast('Add your Groq API key first', 'error'); return; }
+function render(parsed){
+  const panel=document.getElementById('output-panel');panel.innerHTML='';
+  const lead=parsed.lead||{},intel=parsed.intelligence||{},msgs=parsed.messages||[],triggers=parsed.triggers||[];
 
-  const crmData  = document.getElementById('crmData').value.trim();
-  const callNotes= document.getElementById('callNotes').value.trim();
-  if (!crmData)  { showToast('Paste CRM data first', 'error'); return; }
-
-  const btn   = document.getElementById('btn-generate');
-  const inner = document.getElementById('gen-inner');
-  btn.disabled = true;
-  inner.innerHTML = '<span class="spin"></span> Generating…';
-
-  try {
-    const kbHits = retrieveKnowledge(crmData + ' ' + callNotes);
-    const prompt = buildPrompt(crmData, callNotes, selectedStatus, selectedTone, selectedPsy, kbHits);
-    const raw    = await callGroq(prompt);
-    const parsed = extractJSON(raw);
-
-    if (!parsed || !Array.isArray(parsed.messages) || parsed.messages.length < 3) {
-      throw new Error('Could not parse response — please try again');
-    }
-
-    renderOutput(parsed, kbHits);
-    showToast('Messages generated ✓', 'success');
-
-  } catch(e) {
-    console.error(e);
-    showToast(e.message || 'Something went wrong', 'error');
-  } finally {
-    btn.disabled = false;
-    inner.textContent = '⚡ Generate Follow-up Messages';
-  }
-}
-
-/* ═══════════════════════════════════════
-   RENDER
-═══════════════════════════════════════ */
-const MSG_LABELS = ['Break Ice · Build Trust', 'Present Value · Handle Objection', 'Close · Call to Action'];
-const time = new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
-
-function renderOutput(parsed, kbHits) {
-  const panel = document.getElementById('output-panel');
-  panel.innerHTML = '';
-
-  const lead  = parsed.lead || {};
-  const intel = parsed.intelligence || {};
-  const msgs  = parsed.messages || [];
-  const phone = (lead.phone || '').replace(/\D/g,'');
-  const displayName = lead.name || 'this lead';
-
-  // ── Intelligence Card ──
-  if (intel.sentiment_label) {
-    const sl    = (intel.sentiment_label || 'Warm').toLowerCase();
-    const score = parseInt(intel.sentiment_score) || 5;
-    const pct   = Math.round(score / 10 * 100);
-    const objEmoji = {Price:'💰', Authority:'🎯', Need:'💡', Timeline:'⏰'}[intel.objection_type] || '⚠️';
-    const sentimentEmoji = sl==='hot'?'🔥':sl==='warm'?'🌤':'❄️';
-
-    const ic = document.createElement('div');
-    ic.className = 'intel-card';
-    ic.innerHTML = `
-      <div class="intel-head">
-        <span>🧠 Lead Intelligence — ${esc(displayName)}</span>
-        <span class="psy-tag" style="margin-left:auto;">${sentimentEmoji} ${intel.sentiment_label}</span>
-      </div>
-      <div class="intel-grid">
-        <div class="intel-cell">
-          <div class="intel-cell-l">Sentiment</div>
-          <div class="intel-cell-v sentiment-${sl}">${score}/10 · ${intel.sentiment_label}</div>
-          <div class="score-track"><div class="score-fill ${sl}" style="width:${pct}%"></div></div>
-        </div>
-        <div class="intel-cell">
-          <div class="intel-cell-l">Primary Blocker</div>
-          <div class="intel-cell-v">${objEmoji} ${esc(intel.objection_type||'—')}</div>
-          <div class="intel-cell-s">${esc(intel.objection_summary||'')}</div>
-        </div>
-        <div class="intel-cell">
-          <div class="intel-cell-l">Best Window</div>
-          <div class="intel-cell-v">📅 ${esc(intel.optimal_day||'—')}</div>
-          <div class="intel-cell-s">⏰ ${esc(intel.optimal_hour||'—')}</div>
-        </div>
-      </div>
-      ${intel.rebuttal_hooks?.length ? `
-      <div class="rebuttal-section">
-        <div class="rebuttal-label">Rebuttal Hooks</div>
-        ${intel.rebuttal_hooks.map(r => `<div class="rebuttal-item">${esc(r)}</div>`).join('')}
-      </div>` : ''}
-    `;
+  if(intel.sentiment_label){
+    const sl=(intel.sentiment_label||'Warm').toLowerCase(),score=parseInt(intel.sentiment_score)||5,pct=Math.round(score/10*100);
+    const objL={Price:'Price / Cost',Authority:'Decision Authority',Need:'Need Validation',Timeline:'Timeline'};
+    const ic=document.createElement('div');ic.className='intel-card';
+    ic.innerHTML=`<div class="intel-head"><span>Lead Intelligence${lead.name?' — '+esc(lead.name):''}</span><span class="sp sp-${sl}">${esc(intel.sentiment_label)}</span></div><div class="intel-grid"><div class="intel-cell"><div class="ic-l">Sentiment Score</div><div class="ic-v">${score} / 10</div><div class="score-track"><div class="score-fill sf-${sl}" style="width:${pct}%"></div></div></div><div class="intel-cell"><div class="ic-l">Primary Objection</div><div class="ic-v">${esc(objL[intel.objection_type]||intel.objection_type||'—')}</div><div class="ic-s">${esc(intel.objection_summary||'')}</div></div><div class="intel-cell"><div class="ic-l">Best Contact Window</div><div class="ic-v">${esc(intel.optimal_day||'—')}</div><div class="ic-s">${esc(intel.optimal_hour||'')}${intel.optimal_reason?' — '+esc(intel.optimal_reason):''}</div></div></div>${intel.rebuttal_hooks?.length?`<div class="reb-sect"><div class="reb-label">Rebuttal Hooks — ${esc(intel.objection_type||'Objection')}</div>${intel.rebuttal_hooks.map(r=>`<div class="reb-item">${esc(r)}</div>`).join('')}</div>`:''}`;
     panel.appendChild(ic);
   }
 
-  // ── Message Cards ──
-  msgs.forEach((msg, i) => {
-    const waUrl = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : null;
-    const card = document.createElement('div');
-    card.className = 'msg-card';
-    card.innerHTML = `
-      <div class="msg-card-head">
-        <div class="msg-num">${i+1}</div>
-        <div class="msg-label">Follow-up ${i+1} · ${MSG_LABELS[i]}</div>
-        <span class="psy-tag">${selectedPsy}</span>
-        <span class="tone-tag">${selectedTone}</span>
-      </div>
-      <div class="wa-area">
-        <div class="wa-sender">${esc(lead.name || 'You')}</div>
-        <div class="wa-bubble">${esc(msg)}</div>
-        <div class="wa-tick">${time} ✓✓</div>
-      </div>
-      <div class="msg-actions">
-        <button class="btn-copy" onclick="copyMsg(this, ${JSON.stringify(msg).replace(/'/g,'&#39;')})">📋 Copy</button>
-        ${waUrl ? `<a class="btn-wa" href="${waUrl}" target="_blank" rel="noopener">📲 WhatsApp</a>` : '<button class="btn-wa" style="opacity:0.5;cursor:default;">📲 No phone</button>'}
-      </div>
-    `;
+  const cab=document.createElement('button');cab.className='btn-copy-all';cab.textContent='Copy All 5 Messages';
+  cab.onclick=()=>{
+    const header=lead.name?`Lead: ${lead.name}\n\n`:'';
+    const body=msgs.map((m,i)=>{const trg=triggers[i]?` [${triggers[i]}]`:'';return `--- Message ${i+1}: ${MSG_LABELS[i]}${trg} ---\n${m}`;}).join('\n\n');
+    navigator.clipboard.writeText(header+body).then(()=>{cab.textContent='All 5 Messages Copied';cab.classList.add('copied');setTimeout(()=>{cab.textContent='Copy All 5 Messages';cab.classList.remove('copied');},2500);showToast('All messages copied','success');}).catch(()=>showToast('Copy failed','error'));
+  };
+  panel.appendChild(cab);
+
+  msgs.forEach((msg,i)=>{
+    const trg=triggers[i]||'';
+    const card=document.createElement('div');card.className='msg-card';
+    card.innerHTML=`<div class="msg-head"><div class="msg-num">${i+1}</div><div class="msg-label">Message ${i+1} — ${MSG_LABELS[i]}</div>${trg?`<span class="psy-tag">${esc(trg)}</span>`:''}<span class="tone-tag">${esc(selTone)}</span></div><div class="msg-body">${esc(msg)}</div><div class="msg-footer"><button class="btn-copy-msg" data-i="${i}" onclick="copyOne(this)">Copy Message</button></div>`;
     panel.appendChild(card);
   });
 }
 
-/* ═══════════════════════════════════════
-   UTILS
-═══════════════════════════════════════ */
-function esc(s) {
-  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-}
-
-function copyMsg(btn, msg) {
-  navigator.clipboard.writeText(msg).then(() => {
-    btn.textContent = '✓ Copied!';
-    setTimeout(() => btn.textContent = '📋 Copy', 1800);
-  });
-}
-
-let toastT;
-function showToast(msg, type = '') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = `toast show ${type}`;
-  clearTimeout(toastT);
-  toastT = setTimeout(() => t.className = 'toast', 3000);
-}
+function copyOne(btn){const i=parseInt(btn.dataset.i),text=allMessages[i]||'';navigator.clipboard.writeText(text).then(()=>{btn.textContent='Copied';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy Message';btn.classList.remove('copied');},2000);}).catch(()=>showToast('Copy failed','error'));}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
+let _tt;function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast show${type?' '+type:''}`;clearTimeout(_tt);_tt=setTimeout(()=>t.className='toast',3000);}
 </script>
 </body>
 </html>
