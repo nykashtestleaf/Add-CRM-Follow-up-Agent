@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>CRM Follow-up AI Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f5f7;--s:#fff;--s2:#f8f9fb;--s3:#f1f3f6;
+  --border:#e4e7ec;--border2:#cdd1da;
+  --text:#0f1623;--muted:#5c6479;--muted2:#9aa0b2;
+  --accent:#1a56db;--accent-bg:#eff4ff;--accent-bd:#c3d3f7;
+  --green:#0d7a45;--green-bg:#e6f5ec;--green-bd:#a3d9b8;
+  --purple:#5b21b6;--purple-bg:#f0ebff;--purple-bd:#c4b0f5;
+  --red:#b91c1c;--amber:#92400e;--amber-bg:#fef3c7;
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --r:8px;--sh:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --sh-md:0 3px 10px rgba(0,0,0,.08);
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+
+/* GATE */
+.gate{position:fixed;inset:0;background:var(--bg);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;transition:opacity .3s}
+.gate.hide{opacity:0;pointer-events:none}.gate.hidden{display:none!important}
+.gate-card{background:var(--s);border:1px solid var(--border);border-radius:12px;padding:38px 34px 32px;max-width:420px;width:100%;box-shadow:var(--sh-md)}
+.gate-eyebrow{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--accent);margin-bottom:8px}
+.gate-title{font-size:21px;font-weight:700;letter-spacing:-.3px;margin-bottom:7px}
+.gate-sub{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:24px}
+.gate-sub a{color:var(--accent);text-decoration:none;font-weight:500}
+.gate-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:24px}
+.gate-step{background:var(--s2);border:1px solid var(--border);border-radius:7px;padding:11px 9px;font-size:11px;color:var(--muted);text-align:center;line-height:1.5}
+.gate-step strong{display:block;font-size:16px;font-weight:700;color:var(--text);margin-bottom:3px}
+.gate-fl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted2);margin-bottom:7px}
+.gate-input{width:100%;border:1.5px solid var(--border);border-radius:7px;padding:11px 13px;font-size:13px;font-family:var(--mono);color:var(--text);background:var(--s2);outline:none;letter-spacing:.5px;margin-bottom:8px;transition:border-color .15s,box-shadow .15s}
+.gate-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,86,219,.1);background:#fff}
+.gate-input.valid{border-color:var(--green)}.gate-input.invalid{border-color:var(--red)}
+.gate-status{font-size:12px;min-height:17px;margin-bottom:14px;color:var(--muted)}
+.gate-status.ok{color:var(--green)}.gate-status.err{color:var(--red)}
+.btn-primary{width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s}
+.btn-primary:hover{background:#1447c0}.btn-primary:disabled{background:var(--border2);color:var(--muted2);cursor:not-allowed}
+
+/* TOPBAR */
+.topbar{background:var(--s);border-bottom:1px solid var(--border);height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;box-shadow:var(--sh)}
+.tb-left{display:flex;align-items:center;gap:14px}
+.tb-title{font-size:15px;font-weight:700;letter-spacing:-.2px}
+.tb-sub{font-size:11px;color:var(--muted2)}
+.tb-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:var(--accent-bg);border:1px solid var(--accent-bd);border-radius:4px;font-size:11px;font-weight:600;color:var(--accent);letter-spacing:.3px}
+.tb-badge::before{content:'';width:6px;height:6px;background:var(--accent);border-radius:50%}
+.btn-link{padding:6px 13px;background:none;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;font-family:var(--font);transition:all .15s}
+.btn-link:hover{border-color:var(--border2);color:var(--text)}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:360px 1fr;gap:16px;max-width:1160px;margin:0 auto;padding:20px 20px 72px;align-items:start}
+
+/* CARD */
+.card{background:var(--s);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.card-head{padding:10px 16px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);display:flex;align-items:center;justify-content:space-between}
+.card-body{padding:14px 16px}
+.field{margin-bottom:12px}.field:last-child{margin-bottom:0}
+.field-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);margin-bottom:6px}
+.paste-box{width:100%;border:1px solid var(--border);border-radius:7px;padding:10px 12px;font-family:var(--font);font-size:13px;color:var(--text);background:var(--s2);resize:vertical;outline:none;min-height:76px;line-height:1.55;transition:border-color .15s,box-shadow .15s}
+.paste-box:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,86,219,.08);background:#fff}
+
+/* TOGGLES */
+.toggle-group{display:flex;flex-wrap:wrap;gap:6px}
+.tgl-btn{padding:5px 13px;border-radius:5px;border:1px solid var(--border2);background:var(--s);color:var(--muted);font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);transition:all .13s}
+.tgl-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.tgl-btn.st-np{background:var(--accent-bg);color:var(--accent);border-color:var(--accent-bd);font-weight:600}
+.tgl-btn.st-cd{background:var(--green-bg);color:var(--green);border-color:var(--green-bd);font-weight:600}
+.tgl-btn.tone-on{background:var(--text);color:#fff;border-color:var(--text);font-weight:600}
+.tgl-btn.psy-on{background:var(--purple-bg);color:var(--purple);border-color:var(--purple-bd);font-weight:700}
+
+/* KB */
+.kb-chips{display:flex;flex-wrap:wrap;gap:5px}
+.kb-chip{padding:3px 9px;background:var(--s2);border:1px solid var(--border);border-radius:4px;font-size:10px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.4px}
+.kb-chip.hit{background:var(--green-bg);border-color:var(--green-bd);color:var(--green)}
+
+/* ACTION ROW */
+.action-row{display:flex;gap:8px;margin-top:14px}
+.btn-generate{flex:1;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer;transition:background .15s,transform .1s;display:flex;align-items:center;justify-content:center;gap:7px}
+.btn-generate:hover{background:#1447c0}.btn-generate:active{transform:scale(.99)}
+.btn-generate:disabled{background:var(--border2);color:var(--muted2);cursor:not-allowed;transform:none}
+.btn-secondary{padding:12px 16px;background:var(--s);border:1px solid var(--border2);border-radius:8px;font-size:13px;font-weight:600;font-family:var(--font);color:var(--muted);cursor:pointer;transition:all .14s;white-space:nowrap}
+.btn-secondary:hover{border-color:var(--text);color:var(--text);background:var(--s2)}
+
+/* OUTPUT */
+.output-panel{display:flex;flex-direction:column;gap:12px}
+.empty-state{padding:56px 24px;text-align:center}
+.empty-state h3{font-size:15px;font-weight:600;color:var(--text);margin-bottom:8px}
+.empty-state p{font-size:13px;color:var(--muted);line-height:1.65;max-width:280px;margin:0 auto}
+
+/* INTEL */
+.intel-card{background:var(--s);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;animation:fadeUp .2s ease}
+.intel-head{padding:10px 16px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);display:flex;align-items:center;justify-content:space-between}
+.sp{padding:2px 9px;border-radius:4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.sp-hot{background:#fee2e2;color:var(--red)}.sp-warm{background:var(--amber-bg);color:var(--amber)}.sp-cold{background:var(--accent-bg);color:var(--accent)}
+.intel-grid{display:grid;grid-template-columns:repeat(3,1fr)}
+.intel-cell{padding:12px 16px;border-right:1px solid var(--border)}.intel-cell:last-child{border-right:none}
+.ic-l{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted2);margin-bottom:4px}
+.ic-v{font-size:13px;font-weight:600;color:var(--text)}
+.ic-s{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.45}
+.score-track{height:4px;background:var(--border);border-radius:2px;margin-top:6px;overflow:hidden}
+.score-fill{height:100%;border-radius:2px;transition:width .5s ease}
+.sf-hot{background:var(--red)}.sf-warm{background:#d97706}.sf-cold{background:var(--accent)}
+.reb-sect{padding:12px 16px;border-top:1px solid var(--border)}
+.reb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);margin-bottom:8px}
+.reb-item{padding:8px 12px;background:var(--s2);border:1px solid var(--border);border-left:3px solid var(--accent-bd);border-radius:6px;font-size:12px;color:var(--text);margin-bottom:6px;line-height:1.5}
+.reb-item:last-child{margin-bottom:0}
+
+/* COPY ALL */
+.btn-copy-all{width:100%;padding:11px;background:var(--s);border:1px solid var(--border2);border-radius:8px;font-size:13px;font-weight:600;font-family:var(--font);color:var(--muted);cursor:pointer;transition:all .14s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-copy-all:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.btn-copy-all.copied{border-color:var(--green);color:var(--green);background:var(--green-bg)}
+
+/* MSG CARD */
+.msg-card{background:var(--s);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;animation:fadeUp .18s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.msg-head{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;background:var(--s2)}
+.msg-num{width:22px;height:22px;background:var(--text);color:#fff;border-radius:5px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--mono)}
+.msg-label{font-size:12px;font-weight:600;color:var(--text);flex:1}
+.psy-tag{padding:2px 8px;background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-bd);border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.tone-tag{padding:2px 8px;background:var(--s2);color:var(--muted);border:1px solid var(--border2);border-radius:4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.msg-body{padding:16px;font-size:14px;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word;border-bottom:1px solid var(--border)}
+.msg-footer{padding:9px 12px;display:flex;align-items:center;justify-content:flex-end}
+.btn-copy-msg{padding:6px 14px;background:var(--s2);border:1px solid var(--border2);border-radius:6px;font-size:12px;font-weight:600;font-family:var(--font);color:var(--muted);cursor:pointer;transition:all .13s}
+.btn-copy-msg:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.btn-copy-msg.copied{border-color:var(--green);color:var(--green);background:var(--green-bg)}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--text);color:#fff;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:9999;transition:transform .22s ease,opacity .22s;opacity:0;white-space:nowrap;max-width:90vw}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.success{background:var(--green)}.toast.error{background:var(--red)}
+.spin{width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite;display:inline-block;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:800px){
+  .layout{grid-template-columns:1fr;padding:12px 12px 60px;gap:12px}
+  .topbar{padding:0 14px}
+  .intel-grid{grid-template-columns:1fr 1fr}
+  .intel-cell:nth-child(2){border-right:none}
+  .intel-cell:nth-child(3){border-top:1px solid var(--border);border-right:none;grid-column:1/-1}
+  .action-row{flex-wrap:wrap}
+  .btn-secondary{flex:1;justify-content:center;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <div class="gate-eyebrow">CRM Follow-up AI Agent</div>
+    <div class="gate-title">Connect Your Groq API Key</div>
+    <div class="gate-sub">Powered by Groq LLaMA 3.3. Get your free key at <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a></div>
+    <div class="gate-steps">
+      <div class="gate-step"><strong>1</strong>Visit Groq Console</div>
+      <div class="gate-step"><strong>2</strong>Create API Key</div>
+      <div class="gate-step"><strong>3</strong>Paste Below</div>
+    </div>
+    <div class="gate-fl">Your Groq API Key</div>
+    <input type="password" class="gate-input" id="gate-key" placeholder="gsk_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" oninput="onGateInput(this)"/>
+    <div class="gate-status" id="gate-status"></div>
+    <button class="btn-primary" id="btn-gate" onclick="saveKey()" disabled>
+      <span id="gate-inner">Save and Continue</span>
+    </button>
+  </div>
+</div>
+
+<header class="topbar">
+  <div class="tb-left">
+    <div>
+      <div class="tb-title">CRM Follow-up AI Agent</div>
+      <div class="tb-sub">Groq LLaMA 3.3 · RAG Knowledge Base · 5 Messages</div>
+    </div>
+    <div class="tb-badge">Active</div>
+  </div>
+  <button class="btn-link" onclick="changeKey()">Change API Key</button>
+</header>
+
+<div class="layout">
+  <div style="display:flex;flex-direction:column;gap:12px;">
+
+    <div class="card">
+      <div class="card-head">Lead Data</div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:12px;">
+        <div class="field">
+          <div class="field-label">CRM Data</div>
+          <textarea class="paste-box" id="crmData" placeholder="Paste CRM data — name, company, designation, course interest, experience, CTC, contact number..." style="min-height:90px;"></textarea>
+        </div>
+        <div class="field">
+          <div class="field-label">Call Notes</div>
+          <textarea class="paste-box" id="callNotes" placeholder="Call outcome — interest level, objections, budget concerns, callback requested..." style="min-height:68px;"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">Lead Status</div>
+      <div class="card-body">
+        <div class="toggle-group" id="status-grp">
+          <button class="tgl-btn st-np" data-v="not-picked" onclick="pickStatus(this)">Not Picked</button>
+          <button class="tgl-btn" data-v="call-done" onclick="pickStatus(this)">Call Done</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">Message Tone</div>
+      <div class="card-body">
+        <div class="toggle-group" id="tone-grp">
+          <button class="tgl-btn tone-on" data-v="Professional" onclick="pickTone(this)">Professional</button>
+          <button class="tgl-btn" data-v="Friendly" onclick="pickTone(this)">Friendly</button>
+          <button class="tgl-btn" data-v="Direct" onclick="pickTone(this)">Direct</button>
+          <button class="tgl-btn" data-v="Empathetic" onclick="pickTone(this)">Empathetic</button>
+          <button class="tgl-btn" data-v="Conversational" onclick="pickTone(this)">Conversational</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <span>Psychology Triggers</span>
+        <span style="font-size:10px;font-weight:500;color:var(--muted2);text-transform:none;letter-spacing:0;">Select multiple — rotated across 5 messages</span>
+      </div>
+      <div class="card-body">
+        <div class="toggle-group" id="psy-grp">
+          <button class="tgl-btn psy-on" data-v="Fear" onclick="togglePsy(this)">Fear</button>
+          <button class="tgl-btn" data-v="Greed" onclick="togglePsy(this)">Greed</button>
+          <button class="tgl-btn" data-v="Authority" onclick="togglePsy(this)">Authority</button>
+          <button class="tgl-btn" data-v="Social Proof" onclick="togglePsy(this)">Social Proof</button>
+          <button class="tgl-btn" data-v="Urgency" onclick="togglePsy(this)">Urgency</button>
+          <button class="tgl-btn" data-v="Logic" onclick="togglePsy(this)">Logic</button>
+          <button class="tgl-btn" data-v="Emotional" onclick="togglePsy(this)">Emotional</button>
+          <button class="tgl-btn" data-v="Mentor" onclick="togglePsy(this)">Mentor</button>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--muted2);">
+          Active: <span id="psy-label" style="color:var(--purple);font-weight:600;">Fear</span>
+          <span> — triggers rotate across messages 1 to 5</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">RAG Knowledge Base</div>
+      <div class="card-body">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Topics auto-matched from lead data</div>
+        <div class="kb-chips" id="kb-chips"></div>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <button class="btn-generate" id="btn-gen" onclick="runAgent()">
+        <span id="gen-inner">Generate 5 Messages</span>
+      </button>
+      <button class="btn-secondary" onclick="nextLead()">Next Lead</button>
+      <button class="btn-secondary" onclick="refreshMsgs()">Refresh</button>
+    </div>
+  </div>
+
+  <div class="output-panel" id="output-panel">
+    <div class="card">
+      <div class="empty-state">
+        <h3>No messages generated yet</h3>
+        <p>Paste lead data and call notes, select tone and psychology triggers, then click Generate.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let API_KEY=sessionStorage.getItem('crm_groq_key')||'';
+let selStatus='not-picked',selTone='Professional',selPsy=new Set(['Fear']);
+let allMessages=[],allTriggers=[];
+
+const KB=[
+  {t:'selenium',l:'Selenium',c:'Selenium course covers Java, TestNG, Page Object Model, Jenkins CI/CD and a live industry project with end-to-end placement support.'},
+  {t:'playwright',l:'Playwright',c:'Playwright training includes TypeScript, API testing, cross-browser automation, framework design and full CI/CD pipeline integration.'},
+  {t:'fee',l:'Fee / Cost',c:'Most students fully recover the course investment within 60 to 90 days through salary increments after placement.'},
+  {t:'placement',l:'Placement',c:'Placement support includes mock interview coaching, resume building, LinkedIn profile review and direct recruiter referrals.'},
+  {t:'manual',l:'Manual QA',c:'Manual testing roles are declining sharply. Employers now treat automation as a baseline requirement for any QA position.'},
+  {t:'career',l:'Career',c:'Automation and AI testing skills accelerate career growth by 40 to 80 percent in salary and unlock senior or lead positions faster.'},
+  {t:'automation',l:'Automation',c:'Automation testing engineers are among the highest-demand profiles across product companies and MNCs in India and globally.'},
+  {t:'salary',l:'Salary',c:'Freshers with automation skills earn 4 to 6 LPA. Experienced QA with automation expertise commands 10 to 18 LPA.'},
+  {t:'python',l:'Python',c:'Python-based automation is widely used in AI and ML testing pipelines, opening global opportunities in product companies.'},
+  {t:'interview',l:'Interviews',c:'The program includes 30 or more mock interviews, a curated question bank from top companies and one-on-one mentoring until placed.'},
+];
+
+function kbMatch(text){const t=text.toLowerCase();return KB.filter(k=>t.includes(k.t));}
+function renderKB(hits){const s=new Set(hits.map(h=>h.t));document.getElementById('kb-chips').innerHTML=KB.map(k=>`<span class="kb-chip ${s.has(k.t)?'hit':''}">${k.l}</span>`).join('');}
+['crmData','callNotes'].forEach(id=>{document.getElementById(id).addEventListener('input',()=>{renderKB(kbMatch(document.getElementById('crmData').value+' '+document.getElementById('callNotes').value));});});
+
+function pickStatus(btn){document.querySelectorAll('#status-grp .tgl-btn').forEach(b=>b.className='tgl-btn');btn.classList.add(btn.dataset.v==='not-picked'?'st-np':'st-cd');selStatus=btn.dataset.v;}
+function pickTone(btn){document.querySelectorAll('#tone-grp .tgl-btn').forEach(b=>b.className='tgl-btn');btn.classList.add('tone-on');selTone=btn.dataset.v;}
+function togglePsy(btn){const v=btn.dataset.v;if(selPsy.has(v)){if(selPsy.size===1)return;selPsy.delete(v);btn.classList.remove('psy-on');}else{selPsy.add(v);btn.classList.add('psy-on');}document.getElementById('psy-label').textContent=[...selPsy].join(', ');}
+
+function onGateInput(el){const v=el.value.trim(),st=document.getElementById('gate-status'),btn=document.getElementById('btn-gate');if(!v){el.className='gate-input';st.textContent='';btn.disabled=true;return;}if(v.startsWith('gsk_')&&v.length>20){el.className='gate-input valid';st.textContent='Format valid — click Save to continue';st.className='gate-status ok';btn.disabled=false;}else{el.className='gate-input invalid';st.textContent='Groq keys start with gsk_ and are longer than 20 characters';st.className='gate-status err';btn.disabled=true;}}
+function saveKey(){const v=document.getElementById('gate-key').value.trim();if(!v.startsWith('gsk_')||v.length<20)return;API_KEY=v;sessionStorage.setItem('crm_groq_key',v);const g=document.getElementById('gate');g.classList.add('hide');setTimeout(()=>g.classList.add('hidden'),350);showToast('API key saved','success');}
+function changeKey(){sessionStorage.removeItem('crm_groq_key');API_KEY='';const g=document.getElementById('gate');g.classList.remove('hidden','hide');document.getElementById('gate-key').value='';document.getElementById('gate-status').textContent='';document.getElementById('btn-gate').disabled=true;}
+window.addEventListener('DOMContentLoaded',()=>{renderKB([]);if(API_KEY&&API_KEY.startsWith('gsk_')&&API_KEY.length>20){const g=document.getElementById('gate');g.classList.add('hide');setTimeout(()=>g.classList.add('hidden'),100);}});
+
+function nextLead(){document.getElementById('crmData').value='';document.getElementById('callNotes').value='';allMessages=[];allTriggers=[];renderKB([]);document.getElementById('output-panel').innerHTML='<div class="card"><div class="empty-state"><h3>Ready for next lead</h3><p>Paste the new lead data and call notes, then click Generate.</p></div></div>';document.getElementById('crmData').focus();showToast('Cleared for next lead','');}
+function refreshMsgs(){if(!document.getElementById('crmData').value.trim()){showToast('No lead data — paste CRM data first','error');return;}runAgent();}
+
+const TONE_MAP={Professional:'Polished, credible, business-professional. Formal but not cold.',Friendly:'Warm, approachable, peer-like. Easy to read, not pushy.',Direct:'Short, punchy, no filler. Get to the point immediately.',Empathetic:'Acknowledge their situation before presenting value. Lead with understanding.',Conversational:'Natural text message style. Casual, human, zero formality.'};
+const PSY_MAP={Fear:'Highlight what the lead risks losing or missing by not acting now.',Greed:'Show the financial gain, ROI, or career upside they stand to achieve.',Authority:'Position the advisor and course as the trusted expert with proven outcomes.','Social Proof':'Reference peers in similar situations who succeeded through this program.',Urgency:'Create a real time-based or seat-based constraint that makes delay costly.',Logic:'Use numbers, ROI calculations, and structured reasoning to make the decision clear.',Emotional:'Connect to deeper aspirations — family stability, identity, long-term security.',Mentor:'Write as a trusted guide who understands this journey. Offer insight, not pressure.'};
+const MSG_LABELS=['Build Trust','Identify Need','Present Solution','Handle Objection','Close'];
+
+function buildPrompt(crm,notes,status,tone,psySet,hits){
+  const psyArr=[...psySet];
+  const assigns=Array.from({length:5},(_,i)=>psyArr[i%psyArr.length]);
+  const kbCtx=hits.length?'\nKNOWLEDGE BASE (use where relevant):\n'+hits.map(k=>'- '+k.c).join('\n'):'';
+  const statusNote=status==='not-picked'?'Lead has NOT answered calls. Do not reference a previous call. Approach respectfully without assuming prior contact.':'Lead has spoken with us before. Reference the previous interaction and build continuity.';
+  return `You are a senior career advisor writing professional follow-up messages for an ed-tech sales team.
+
+LEAD CRM DATA:
+${crm||'Not provided'}
+
+CALL NOTES:
+${notes||'Not provided'}
+
+STATUS: ${statusNote}
+TONE: ${TONE_MAP[tone]||TONE_MAP.Professional}
+${kbCtx}
+
+TASK 1 — Extract: name, company, designation, course, experience_years, ctc, intent, phone (null if not found)
+
+TASK 2 — Generate exactly 5 follow-up messages.
+Message 1 — Framework: Build Trust         | Trigger: ${assigns[0]} — ${PSY_MAP[assigns[0]]}
+Message 2 — Framework: Identify Need       | Trigger: ${assigns[1]} — ${PSY_MAP[assigns[1]]}
+Message 3 — Framework: Present Solution    | Trigger: ${assigns[2]} — ${PSY_MAP[assigns[2]]}
+Message 4 — Framework: Handle Objection    | Trigger: ${assigns[3]} — ${PSY_MAP[assigns[3]]}
+Message 5 — Framework: Close               | Trigger: ${assigns[4]} — ${PSY_MAP[assigns[4]]}
+
+STRICT RULES:
+- No emojis anywhere in any message
+- No placeholders — use the actual name from data
+- No bullet points inside message text
+- 2 to 4 sentences per message
+- Every message must open with a completely different line
+- Apply the selected tone consistently across all 5 messages
+- Personalise using every available detail from CRM data and call notes
+
+TASK 3 — Lead intelligence:
+sentiment_score (1-10), sentiment_label (Cold/Warm/Hot), objection_type (Price/Authority/Need/Timeline),
+objection_summary (one sentence), rebuttal_hooks (exactly 2 short rebuttal lines for this lead),
+optimal_day, optimal_hour, optimal_reason
+
+RESPOND ONLY with this exact JSON — no text before or after:
+{"lead":{"name":"","company":"","designation":"","course":"","experience_years":"","ctc":"","intent":"","phone":""},"messages":["","","","",""],"triggers":["${assigns[0]}","${assigns[1]}","${assigns[2]}","${assigns[3]}","${assigns[4]}"],"intelligence":{"sentiment_score":5,"sentiment_label":"Warm","objection_type":"Price","objection_summary":"","rebuttal_hooks":["",""],"optimal_day":"","optimal_hour":"","optimal_reason":""}}`;
+}
+
+async function callGroq(prompt){
+  const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${API_KEY}`},body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:2500,temperature:0.7,messages:[{role:'system',content:'You are a JSON-only API. Respond with valid JSON only. No text before or after.'},{role:'user',content:prompt}]})});
+  const data=await res.json();
+  if(res.status===401)throw new Error('Invalid Groq API key — please re-enter your key');
+  if(res.status===429)throw new Error('Rate limit reached — wait a moment and try again');
+  if(!res.ok)throw new Error(data?.error?.message||`API error ${res.status}`);
+  return data.choices?.[0]?.message?.content||'';
+}
+
+function parseJSON(raw){const s=raw.replace(/```json/g,'').replace(/```/g,'').trim();try{return JSON.parse(s);}catch{}const a=s.indexOf('{'),b=s.lastIndexOf('}');if(a!==-1&&b>a)try{return JSON.parse(s.slice(a,b+1));}catch{}return null;}
+
+async function runAgent(){
+  if(!API_KEY){showToast('Enter your Groq API key first','error');return;}
+  const crm=document.getElementById('crmData').value.trim();
+  const notes=document.getElementById('callNotes').value.trim();
+  if(!crm){showToast('Paste CRM data first','error');return;}
+  const btn=document.getElementById('btn-gen'),inn=document.getElementById('gen-inner');
+  btn.disabled=true;inn.innerHTML='<span class="spin"></span> Generating...';
+  try{
+    const hits=kbMatch(crm+' '+notes);
+    const raw=await callGroq(buildPrompt(crm,notes,selStatus,selTone,selPsy,hits));
+    const parsed=parseJSON(raw);
+    if(!parsed||!Array.isArray(parsed.messages)||parsed.messages.length<5)throw new Error('Could not parse response — please try again');
+    allMessages=parsed.messages;allTriggers=parsed.triggers||[];
+    render(parsed);showToast('5 messages generated','success');
+  }catch(e){console.error(e);showToast(e.message||'Something went wrong','error');}
+  finally{btn.disabled=false;inn.textContent='Generate 5 Messages';}
+}
+
+function render(parsed){
+  const panel=document.getElementById('output-panel');panel.innerHTML='';
+  const lead=parsed.lead||{},intel=parsed.intelligence||{},msgs=parsed.messages||[],triggers=parsed.triggers||[];
+
+  if(intel.sentiment_label){
+    const sl=(intel.sentiment_label||'Warm').toLowerCase(),score=parseInt(intel.sentiment_score)||5,pct=Math.round(score/10*100);
+    const objL={Price:'Price / Cost',Authority:'Decision Authority',Need:'Need Validation',Timeline:'Timeline'};
+    const ic=document.createElement('div');ic.className='intel-card';
+    ic.innerHTML=`<div class="intel-head"><span>Lead Intelligence${lead.name?' — '+esc(lead.name):''}</span><span class="sp sp-${sl}">${esc(intel.sentiment_label)}</span></div><div class="intel-grid"><div class="intel-cell"><div class="ic-l">Sentiment Score</div><div class="ic-v">${score} / 10</div><div class="score-track"><div class="score-fill sf-${sl}" style="width:${pct}%"></div></div></div><div class="intel-cell"><div class="ic-l">Primary Objection</div><div class="ic-v">${esc(objL[intel.objection_type]||intel.objection_type||'—')}</div><div class="ic-s">${esc(intel.objection_summary||'')}</div></div><div class="intel-cell"><div class="ic-l">Best Contact Window</div><div class="ic-v">${esc(intel.optimal_day||'—')}</div><div class="ic-s">${esc(intel.optimal_hour||'')}${intel.optimal_reason?' — '+esc(intel.optimal_reason):''}</div></div></div>${intel.rebuttal_hooks?.length?`<div class="reb-sect"><div class="reb-label">Rebuttal Hooks — ${esc(intel.objection_type||'Objection')}</div>${intel.rebuttal_hooks.map(r=>`<div class="reb-item">${esc(r)}</div>`).join('')}</div>`:''}`;
+    panel.appendChild(ic);
+  }
+
+  const cab=document.createElement('button');cab.className='btn-copy-all';cab.textContent='Copy All 5 Messages';
+  cab.onclick=()=>{
+    const header=lead.name?`Lead: ${lead.name}\n\n`:'';
+    const body=msgs.map((m,i)=>{const trg=triggers[i]?` [${triggers[i]}]`:'';return `--- Message ${i+1}: ${MSG_LABELS[i]}${trg} ---\n${m}`;}).join('\n\n');
+    navigator.clipboard.writeText(header+body).then(()=>{cab.textContent='All 5 Messages Copied';cab.classList.add('copied');setTimeout(()=>{cab.textContent='Copy All 5 Messages';cab.classList.remove('copied');},2500);showToast('All messages copied','success');}).catch(()=>showToast('Copy failed','error'));
+  };
+  panel.appendChild(cab);
+
+  msgs.forEach((msg,i)=>{
+    const trg=triggers[i]||'';
+    const card=document.createElement('div');card.className='msg-card';
+    card.innerHTML=`<div class="msg-head"><div class="msg-num">${i+1}</div><div class="msg-label">Message ${i+1} — ${MSG_LABELS[i]}</div>${trg?`<span class="psy-tag">${esc(trg)}</span>`:''}<span class="tone-tag">${esc(selTone)}</span></div><div class="msg-body">${esc(msg)}</div><div class="msg-footer"><button class="btn-copy-msg" data-i="${i}" onclick="copyOne(this)">Copy Message</button></div>`;
+    panel.appendChild(card);
+  });
+}
+
+function copyOne(btn){const i=parseInt(btn.dataset.i),text=allMessages[i]||'';navigator.clipboard.writeText(text).then(()=>{btn.textContent='Copied';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy Message';btn.classList.remove('copied');},2000);}).catch(()=>showToast('Copy failed','error'));}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
+let _tt;function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast show${type?' '+type:''}`;clearTimeout(_tt);_tt=setTimeout(()=>t.className='toast',3000);}
+</script>
+</body>
+</html>
