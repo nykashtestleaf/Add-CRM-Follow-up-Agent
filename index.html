@@ -1181,6 +1181,106 @@ body {
   .pg:nth-child(2n) { border-right: none; }
   .leads-select { max-width: 130px; }
 }
+
+/* ══════════════════════════════
+   MOBILE RESPONSIVE
+══════════════════════════════ */
+@media (max-width: 600px) {
+
+  /* Topbar */
+  .topbar { padding: 0 12px; height: 50px; }
+  .t-title { font-size: 13px; }
+  .t-sub   { display: none; }
+  .leads-select { max-width: 110px; font-size: 12px; padding: 5px 26px 5px 8px; }
+
+  /* Shell */
+  .shell { padding: 12px 10px 60px; gap: 10px; }
+
+  /* API Gate */
+  .api-gate-card { padding: 24px 18px 20px; }
+  .agc-title { font-size: 18px; }
+  .agc-steps { gap: 6px; }
+  .agc-step-txt { font-size: 9px; }
+  .agc-step-arrow { font-size: 12px; margin-bottom: 10px; }
+
+  /* Modal */
+  .overlay { padding: 0; align-items: flex-end; }
+  .modal {
+    border-radius: 18px 18px 0 0;
+    max-height: 92vh;
+    width: 100%;
+  }
+  .modal-head { padding: 14px 16px 10px; }
+  .modal-head-left h3 { font-size: 15px; }
+  .modal-head-left p  { font-size: 11px; }
+  .modal-tabs { padding: 0; }
+  .mtab { font-size: 12px; padding: 9px 10px; }
+  .modal-body { padding: 14px 14px; }
+  .paste-box { min-height: 140px; font-size: 13px; }
+  .modal-footer { padding: 10px 14px 14px; }
+  .btn-go { font-size: 14px; padding: 12px; }
+
+  /* Profile card */
+  .profile-top { padding: 12px 14px; gap: 10px; }
+  .avatar { width: 40px; height: 40px; font-size: 15px; border-radius: 10px; }
+  .profile-name { font-size: 14px; }
+  .profile-role { font-size: 11px; }
+  .spill { font-size: 10px; padding: 3px 8px; }
+  .profile-grid { grid-template-columns: 1fr 1fr; }
+  .pg { padding: 9px 14px; }
+  .pg-l { font-size: 9px; }
+  .pg-v { font-size: 12px; }
+  .lead-detail, .intent-row, .call-note-row, .module-row { padding: 10px 14px; }
+
+  /* Edit dropdown */
+  .btn-edit { font-size: 11px; padding: 5px 9px; }
+  .edit-dropdown { right: 0; min-width: 140px; }
+  .edd-item { font-size: 12px; padding: 8px 12px; }
+
+  /* Follow-up card */
+  .fu-top { padding: 10px 14px; flex-wrap: wrap; gap: 6px; }
+  .fu-title { font-size: 12px; }
+  .prog-track { width: 60px; }
+
+  /* Tone bar */
+  .tone-bar { padding: 10px 14px 10px; }
+  .tone-btns { gap: 5px; }
+  .tone-btn { font-size: 11px; padding: 5px 10px; }
+  .tone-regen-row { flex-wrap: wrap; gap: 7px; }
+  .tone-regen-row span { font-size: 11px; }
+  .btn-regen { font-size: 12px; padding: 7px 12px; }
+
+  /* Step cards */
+  .step-head { padding: 10px 12px; gap: 8px; }
+  .snum { width: 26px; height: 26px; font-size: 11px; border-radius: 6px; }
+  .stitle { font-size: 12px; }
+  .shint  { font-size: 10px; }
+  .psych-tag { font-size: 9px; padding: 2px 6px; display: none; }
+  .stag { font-size: 10px; padding: 2px 7px; }
+  .wa-bub { font-size: 13px; max-width: 95%; }
+  .act-row { padding: 8px 10px; gap: 5px; flex-wrap: wrap; }
+  .btn-mark { font-size: 12px; padding: 8px; }
+  .btn-sm   { font-size: 11px; padding: 7px 9px; }
+  .locked-note { font-size: 11px; padding: 9px 12px; }
+
+  /* Done banner */
+  .done-banner { padding: 16px; font-size: 13px; }
+
+  /* Toast */
+  .toast { font-size: 12px; padding: 9px 16px; max-width: 95vw; }
+
+  /* Empty state */
+  .empty-state { padding: 48px 16px; }
+  .empty-state h2 { font-size: 17px; }
+  .empty-state p  { font-size: 13px; }
+  .floating-hint  { font-size: 12px; padding: 8px 16px; }
+}
+
+@media (max-width: 380px) {
+  .tone-btn .tone-emoji { display: none; }
+  .spill { display: none; }
+  .profile-grid { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
@@ -1303,22 +1403,19 @@ body {
       <button class="mtab on" id="tab-crm-btn" onclick="switchTab('crm')">📋 CRM Data</button>
       <button class="mtab" id="tab-call-btn" onclick="switchTab('call')">📞 Closed Call Note</button>
     </div>
-    <div class="modal-body tab-pane" id="tab-crm">
-      <div class="field-label">Paste full copied text from Zoho CRM</div>
-      <textarea class="paste-box" id="crm-text" oninput="checkGoBtn()"
-        placeholder="Paste anything from CRM — contact page, activity log, lead details, whatever you copied.
-
-AI will extract:
-  • Name, Company, Designation
-  • Course / Product interest
-  • Experience & CTC
-  • Intent of learning
-  • Call status
-
-Partial data is fine — AI uses what's available."></textarea>
+        <!-- BOTH textareas always in DOM — wrappers show/hide, not the textareas -->
+    <div class="modal-body">
+      <div id="tab-crm-body">
+        <div class="field-label">Paste full copied text from Zoho CRM</div>
+        <textarea class="paste-box" id="crm-text" oninput="onCrmInput(this)"
+          placeholder="Paste anything from CRM — contact page, activity log, lead details.&#10;&#10;AI will extract: Name, Company, Designation, Course, Experience, CTC, Intent, Status.&#10;&#10;Partial data is fine — AI uses what's available."></textarea>
+      </div>
+      <div id="tab-call-body" style="display:none;">
+        <div class="field-label">What did you speak about on the call?</div>
+        <textarea class="paste-box" id="call-text" oninput="onCallInput(this)"
+          placeholder="Short note about the call — e.g: 'Spoke to Arjun. 4 yrs IT, interested in PM. Needs to check with family. Budget concern. Call back next week.' &#10;&#10;This personalises all 5 messages."></textarea>
+      </div>
     </div>
-    <div class="modal-body tab-pane" id="tab-call" style="display:none;">
-      <div class="field-label">What did you speak about on the call?</div>
       <textarea class="paste-box" id="call-text" oninput="checkGoBtn()"
         placeholder="Write a short note — e.g:
 
@@ -1448,6 +1545,7 @@ function openModal(mode) {
   document.getElementById('modal-sub').textContent   = 'Paste CRM data and your call note — AI does the rest';
   document.getElementById('overlay').classList.add('open');
   if (mode !== 'edit') {
+    _crmVal = ''; _callVal = '';
     const ct = document.getElementById('crm-text');
     const cl = document.getElementById('call-text');
     if (ct) ct.value = '';
@@ -1459,48 +1557,48 @@ function openModal(mode) {
 function closeModal() { document.getElementById('overlay').classList.remove('open'); }
 function outsideClick(e) { if (e.target === document.getElementById('overlay')) closeModal(); }
 
+/* CRM and call note stored in JS vars so display:none never loses data */
+let _crmVal = '', _callVal = '';
+
+function onCrmInput(el)  { _crmVal  = el.value; checkGoBtn(); }
+function onCallInput(el) { _callVal = el.value; checkGoBtn(); }
+
 function switchTab(id) {
-  // Use visibility+height instead of display:none so textarea values persist
-  const crmPane  = document.getElementById('tab-crm');
-  const callPane = document.getElementById('tab-call');
-  if (crmPane)  crmPane.style.display  = id === 'crm'  ? 'block' : 'none';
-  if (callPane) callPane.style.display = id === 'call' ? 'block' : 'none';
+  const crmBody  = document.getElementById('tab-crm-body');
+  const callBody = document.getElementById('tab-call-body');
+  if (crmBody)  crmBody.style.display  = id === 'crm'  ? 'block' : 'none';
+  if (callBody) callBody.style.display = id === 'call' ? 'block' : 'none';
   document.getElementById('tab-crm-btn').classList.toggle('on', id === 'crm');
   document.getElementById('tab-call-btn').classList.toggle('on', id === 'call');
-  // Re-check button after tab switch — reads both textareas regardless of visibility
   checkGoBtn();
 }
 
 function checkGoBtn() {
-  // Read directly from DOM elements regardless of display state
-  const crmEl  = document.getElementById('crm-text');
-  const callEl = document.getElementById('call-text');
-  const crm    = (crmEl  ? crmEl.value  : '').trim();
-  const call   = (callEl ? callEl.value : '').trim();
-
-  const btn     = document.getElementById('btn-go');
-  const inner   = document.getElementById('go-inner');
-  const hint    = document.getElementById('go-hint');
+  const crm  = _crmVal.trim();
+  const call = _callVal.trim();
+  const btn  = document.getElementById('btn-go');
+  const inner = document.getElementById('go-inner');
+  const hint  = document.getElementById('go-hint');
   const crmTab  = document.getElementById('tab-crm-btn');
   const callTab = document.getElementById('tab-call-btn');
   if (!btn) return;
 
-  // Green dot on tabs that have content
   if (crmTab)  crmTab.classList.toggle('filled', crm.length > 0);
   if (callTab) callTab.classList.toggle('filled', call.length > 0);
 
-  if (crm && call) {
+  if (crm) {
     btn.disabled = false;
     if (inner) inner.textContent = '⚡ Extract & Generate 5 Follow-ups';
-    if (hint)  { hint.textContent = '✓ Both tabs filled — ready to generate'; hint.style.color = '#16a34a'; }
-  } else if (crm) {
-    btn.disabled = false;
-    if (inner) inner.textContent = '⚡ Extract & Generate 5 Follow-ups';
-    if (hint)  { hint.textContent = 'Call note is optional — you can still generate'; hint.style.color = '#6b7280'; }
+    if (hint) {
+      hint.textContent = call
+        ? '✓ Both tabs filled — ready to generate'
+        : 'Call note is optional — you can still generate';
+      hint.style.color = call ? '#16a34a' : '#6b7280';
+    }
   } else {
     btn.disabled = true;
     if (inner) inner.textContent = '⚡ Paste CRM data to unlock';
-    if (hint)  { hint.textContent = 'Paste CRM data above to enable — call note is optional'; hint.style.color = '#6b7280'; }
+    if (hint)  { hint.textContent = 'Paste CRM data above to enable'; hint.style.color = '#6b7280'; }
   }
 }
 
@@ -1598,17 +1696,13 @@ CRITICAL: Your ENTIRE response must be ONLY the JSON object below — no introdu
 
 /* ══ PROCESS ══ */
 async function processAll() {
-  const crmEl    = document.getElementById('crm-text');
-  const callEl   = document.getElementById('call-text');
-  const crmText  = (crmEl  ? crmEl.value  : '').trim();
-  const callNote = (callEl ? callEl.value : '').trim();
+  const crmText  = _crmVal.trim();
+  const callNote = _callVal.trim();
 
   if (!crmText) {
     switchTab('crm');
-    if (crmEl) {
-      crmEl.classList.add('err');
-      setTimeout(() => crmEl.classList.remove('err'), 2000);
-    }
+    const crmEl = document.getElementById('crm-text');
+    if (crmEl) { crmEl.classList.add('err'); setTimeout(() => crmEl.classList.remove('err'), 2000); }
     showToast('Please paste CRM data in the first tab', 'error');
     return;
   }
@@ -1730,8 +1824,9 @@ function loadSavedLead() {
   lead = { ...entry };
   msgs = entry.messages || [];
   sent = entry.sent || 0;
-  document.getElementById('crm-text').value  = lead.crmRaw  || '';
-  document.getElementById('call-text').value = lead.callNote || '';
+  _crmVal = lead.crmRaw || ''; _callVal = lead.callNote || '';
+  const _ct = document.getElementById('crm-text'); if(_ct) _ct.value = _crmVal;
+  const _cl = document.getElementById('call-text'); if(_cl) _cl.value = _callVal;
   renderPage();
   document.getElementById('leads-select').value = '';
 }
