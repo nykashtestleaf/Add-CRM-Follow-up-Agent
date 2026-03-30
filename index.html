@@ -526,6 +526,120 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   .sess-intel-cell   { border-right: none; }
 }
 
+
+/* ── SESSION PROGRESS + MESSAGE STATES ── */
+.sess-progress-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  background: var(--s3);
+  color: var(--muted);
+  border: 1px solid var(--border2);
+  white-space: nowrap;
+}
+.sess-progress-pill.sess-partial {
+  background: #fef3c7;
+  color: var(--amber);
+  border-color: #f59e0b44;
+}
+.sess-progress-pill.sess-done {
+  background: var(--green-bg);
+  color: var(--green);
+  border-color: var(--green-bd);
+}
+
+/* Next message highlight */
+.sess-msg-card { border-bottom: 1px solid var(--border); background: var(--s); }
+.sess-msg-card:last-child { border-bottom: none; }
+.sess-msg-card.sess-msg-sent { opacity: 0.5; }
+.sess-msg-card.sess-msg-next {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-bg);
+}
+.sess-msg-head {
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0,0,0,0.02);
+}
+.sess-msg-card.sess-msg-next .sess-msg-head { background: rgba(26,86,219,0.04); }
+.sess-msg-num {
+  width: 20px; height: 20px;
+  background: var(--text); color: #fff;
+  border-radius: 4px; font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); flex-shrink: 0;
+}
+.sess-msg-num.sent { background: var(--green); }
+.sess-msg-num.next { background: var(--accent); }
+.sess-msg-label { font-size: 11px; font-weight: 600; color: var(--text); flex: 1; }
+.sess-msg-trigger {
+  padding: 1px 6px;
+  background: var(--purple-bg); color: var(--purple);
+  border: 1px solid var(--purple-bd);
+  border-radius: 3px; font-size: 9px; font-weight: 700; text-transform: uppercase;
+}
+.sess-next-badge {
+  padding: 2px 7px;
+  background: var(--accent-bg); color: var(--accent);
+  border: 1px solid var(--accent-bd);
+  border-radius: 4px; font-size: 9px; font-weight: 700;
+}
+.sess-sent-badge {
+  padding: 2px 7px;
+  background: var(--green-bg); color: var(--green);
+  border: 1px solid var(--green-bd);
+  border-radius: 4px; font-size: 9px; font-weight: 700;
+}
+.sess-msg-body {
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.s-copy-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 4px 12px;
+  background: var(--s);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  font-size: 11px; font-weight: 600;
+  font-family: var(--font);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.13s;
+}
+.s-copy-btn:hover  { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+.s-copy-btn.copied { border-color: var(--green);  color: var(--green);  background: var(--green-bg); }
+.s-copy-btn.next-copy {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.s-copy-btn.next-copy:hover { background: #1447c0; border-color: #1447c0; }
+.s-copy-all-btn {
+  padding: 3px 10px;
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  font-size: 10px; font-weight: 600;
+  font-family: var(--font);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.13s;
+}
+.s-copy-all-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+
 </style>
 </head>
 <body>
@@ -895,28 +1009,47 @@ function saveSession(parsed){
   const lead = parsed.lead || {};
   const intel = parsed.intelligence || {};
   const entry = {
-    id:       Date.now(),
-    ts:       new Date().toLocaleString('en-IN', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}),
-    lead:     lead,
-    messages: parsed.messages || [],
-    triggers: parsed.triggers || [],
+    id:           Date.now(),
+    ts:           new Date().toLocaleString('en-IN', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}),
+    lead:         lead,
+    messages:     parsed.messages  || [],
+    triggers:     parsed.triggers  || [],
     intelligence: intel,
-    tone:     selTone,
-    status:   selStatus,
-    psy:      [...selPsy],
-    crm:      (document.getElementById('crmData').value   || '').trim().slice(0, 400),
-    notes:    (document.getElementById('callNotes').value || '').trim().slice(0, 200),
+    tone:         selTone,
+    status:       selStatus,
+    psy:          [...selPsy],
+    crm:          (document.getElementById('crmData').value   || '').trim().slice(0, 600),
+    notes:        (document.getElementById('callNotes').value || '').trim().slice(0, 400),
+    sentCount:    0,
   };
+  // Check if lead already exists (same name+company) — update instead of duplicate
+  const existIdx = sessions.findIndex(s =>
+    s.lead && s.lead.name && lead.name &&
+    s.lead.name.trim().toLowerCase() === lead.name.trim().toLowerCase() &&
+    (s.lead.company||'').toLowerCase() === (lead.company||'').toLowerCase()
+  );
+  if (existIdx !== -1) {
+    entry.sentCount = sessions[existIdx].sentCount || 0; // preserve sent progress
+    sessions.splice(existIdx, 1);
+  }
   sessions.unshift(entry);
   if (sessions.length > 60) sessions.pop();
   try {
     localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
   } catch(e) {
-    // Storage full — remove oldest
     sessions.pop();
     localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
   }
   updateSessionsCount();
+}
+
+function markMessageSent(sessionId){
+  const sessions = getSessions();
+  const s = sessions.find(x => x.id === sessionId);
+  if (!s) return;
+  s.sentCount = Math.min((s.sentCount||0) + 1, s.messages.length);
+  localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
+  renderDrawer(); // refresh drawer
 }
 
 function updateSessionsCount(){
@@ -948,8 +1081,9 @@ function renderDrawer(){
   const list     = document.getElementById('drawer-list');
   const sub      = document.getElementById('drawer-sub');
   const sessions = getSessions();
+  if (!list || !sub) return;
 
-  sub.textContent = sessions.length + ' lead' + (sessions.length !== 1 ? 's' : '') + ' in session history';
+  sub.textContent = sessions.length + ' lead' + (sessions.length !== 1 ? 's' : '') + ' saved';
   list.innerHTML  = '';
 
   if (!sessions.length) {
@@ -957,268 +1091,265 @@ function renderDrawer(){
     return;
   }
 
-  sessions.forEach((s, idx) => {
+  sessions.forEach((s) => {
     const lead  = s.lead  || {};
     const intel = s.intelligence || {};
     const msgs  = s.messages || [];
     const trigs = s.triggers  || [];
+    const sent  = s.sentCount || 0;
+    const nextMsg = sent < msgs.length ? sent : -1; // index of next unsent
 
-    const name    = lead.name        || 'Unknown Lead';
-    const company = lead.company     || '';
-    const course  = lead.course      || lead.designation || '';
-    const phone   = lead.phone       || '';
-    const ctc     = lead.ctc         || '';
+    const name    = lead.name    || 'Unknown Lead';
+    const company = lead.company || '';
+    const course  = lead.course  || lead.designation || '';
+    const phone   = lead.phone   || '';
+    const ctc     = lead.ctc     || '';
     const exp     = lead.experience_years || '';
     const sl      = (intel.sentiment_label || '').toLowerCase();
     const score   = intel.sentiment_score  || '';
     const obj     = intel.objection_type   || '';
-    const objSum  = intel.objection_summary || '';
-    const rebuttalHooks = intel.rebuttal_hooks || [];
-    const optDay  = intel.optimal_day  || '';
-    const optHour = intel.optimal_hour || '';
-    const optReason = intel.optimal_reason || '';
+    const objSum  = intel.objection_summary|| '';
+    const hooks   = intel.rebuttal_hooks   || [];
+    const optDay  = intel.optimal_day      || '';
+    const optHour = intel.optimal_hour     || '';
+    const optReas = intel.optimal_reason   || '';
 
-    // ── BUILD ITEM ──
+    // ── ITEM WRAPPER ──
     const item = document.createElement('div');
     item.className = 'session-item';
-    item.dataset.idx = idx;
 
-    // HEAD
-    const headDiv = document.createElement('div');
-    headDiv.className = 'session-head';
-    headDiv.onclick = () => toggleSession(headDiv);
+    // ── HEADER ──
+    const head = document.createElement('div');
+    head.className = 'session-head';
 
-    const headLeft = document.createElement('div');
-    headLeft.style.cssText = 'flex:1;min-width:0;';
+    const headL = document.createElement('div');
+    headL.style.cssText = 'flex:1;min-width:0;overflow:hidden;';
 
-    const nameEl = document.createElement('div');
-    nameEl.className = 'session-name';
-    nameEl.textContent = name + (company ? ' · ' + company : '');
-    headLeft.appendChild(nameEl);
+    const nameRow = document.createElement('div');
+    nameRow.className = 'session-name';
+    nameRow.textContent = name + (company ? ' · ' + company : '');
+    headL.appendChild(nameRow);
 
     if (course) {
-      const courseEl = document.createElement('div');
-      courseEl.className = 'session-course';
-      courseEl.textContent = course;
-      headLeft.appendChild(courseEl);
+      const cr = document.createElement('div');
+      cr.className = 'session-course';
+      cr.textContent = course;
+      headL.appendChild(cr);
     }
 
-    const metaEl = document.createElement('div');
-    metaEl.className = 'session-meta';
-    metaEl.textContent = s.ts + ' · ' + (s.status === 'not-picked' ? 'Not Picked' : 'Call Done') + ' · ' + (s.tone || 'Professional');
-    headLeft.appendChild(metaEl);
-    headDiv.appendChild(headLeft);
+    const meta = document.createElement('div');
+    meta.className = 'session-meta';
+    meta.textContent = s.ts + ' · ' + (s.tone || 'Professional') + ' · ' + (s.status === 'not-picked' ? 'Not Picked' : 'Call Done');
+    headL.appendChild(meta);
+    head.appendChild(headL);
 
-    const headRight = document.createElement('div');
-    headRight.className = 'session-right';
+    const headR = document.createElement('div');
+    headR.className = 'session-right';
 
-    const toggle = document.createElement('span');
-    toggle.className = 'session-toggle';
-    toggle.textContent = '▾';
-    headRight.appendChild(toggle);
+    // Progress pill
+    const prog = document.createElement('div');
+    prog.className = 'sess-progress-pill' + (sent >= msgs.length ? ' sess-done' : sent > 0 ? ' sess-partial' : '');
+    prog.textContent = sent >= msgs.length ? 'All Sent' : sent > 0 ? 'Msg ' + sent + ' of ' + msgs.length + ' sent' : 'Not started';
+    headR.appendChild(prog);
 
-    // Score + sentiment badges
-    const badges1 = document.createElement('div');
-    badges1.className = 'session-badges';
-    if (score) { const b=document.createElement('span'); b.className='s-badge s-score'; b.textContent=score+'/10'; badges1.appendChild(b); }
-    if (sl)    { const b=document.createElement('span'); b.className='s-badge s-'+(sl==='hot'?'hot':sl==='warm'?'warm':'cold'); b.textContent=intel.sentiment_label; badges1.appendChild(b); }
-    headRight.appendChild(badges1);
+    const tog = document.createElement('span');
+    tog.className = 'session-toggle';
+    tog.textContent = '▾';
+    headR.appendChild(tog);
 
-    // Psy badges
-    const badges2 = document.createElement('div');
-    badges2.className = 'session-badges';
-    (s.psy || []).slice(0,4).forEach(p => {
-      const b = document.createElement('span');
-      b.className = 's-badge s-psy';
-      b.textContent = p;
-      badges2.appendChild(b);
+    // Badges row
+    const badgeRow = document.createElement('div');
+    badgeRow.className = 'session-badges';
+    if (score) { const b = document.createElement('span'); b.className = 's-badge s-score'; b.textContent = score + '/10'; badgeRow.appendChild(b); }
+    if (sl)    { const b = document.createElement('span'); b.className = 's-badge s-' + (sl === 'hot' ? 'hot' : sl === 'warm' ? 'warm' : 'cold'); b.textContent = intel.sentiment_label; badgeRow.appendChild(b); }
+    (s.psy || []).slice(0, 2).forEach(p => {
+      const b = document.createElement('span'); b.className = 's-badge s-psy'; b.textContent = p; badgeRow.appendChild(b);
     });
-    headRight.appendChild(badges2);
-    headDiv.appendChild(headRight);
-    item.appendChild(headDiv);
+    headR.appendChild(badgeRow);
+    head.appendChild(headR);
 
-    // BODY
+    // Click anywhere on head to toggle
+    head.onclick = () => {
+      document.querySelectorAll('.session-item.expanded').forEach(el => {
+        if (el !== item) el.classList.remove('expanded');
+      });
+      item.classList.toggle('expanded');
+      if (item.classList.contains('expanded')) {
+        setTimeout(() => item.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+      }
+    };
+    item.appendChild(head);
+
+    // ── BODY ──
     const body = document.createElement('div');
     body.className = 'session-body';
 
-    // ── LEAD PROFILE SECTION ──
-    const profileSect = document.createElement('div');
-    profileSect.className = 'sess-section';
+    // ── 1. LEAD PROFILE ──
+    const sec1 = mkSection('Lead Profile');
+    const grid1 = document.createElement('div');
+    grid1.className = 'sess-profile-grid';
+    [['Name', name], ['Company', company], ['Course', course], ['Experience', exp], ['CTC', ctc], ['Phone', phone]]
+      .filter(([,v]) => v)
+      .forEach(([l, v]) => {
+        const c = document.createElement('div');
+        c.className = 'sess-profile-cell';
+        c.innerHTML = '<div class="sess-cell-l">' + l + '</div><div class="sess-cell-v">' + v + '</div>';
+        grid1.appendChild(c);
+      });
+    sec1.appendChild(grid1);
+    body.appendChild(sec1);
 
-    const profHead = document.createElement('div');
-    profHead.className = 'sess-section-head';
-    profHead.textContent = 'Lead Profile';
-    profileSect.appendChild(profHead);
-
-    const profGrid = document.createElement('div');
-    profGrid.className = 'sess-profile-grid';
-    const profileFields = [
-      ['Name',       name],
-      ['Company',    company],
-      ['Course',     course],
-      ['Experience', exp],
-      ['CTC',        ctc],
-      ['Phone',      phone],
-    ].filter(f => f[1]);
-    profileFields.forEach(([l, v]) => {
-      const cell = document.createElement('div');
-      cell.className = 'sess-profile-cell';
-      cell.innerHTML = '<div class="sess-cell-l">' + esc(l) + '</div><div class="sess-cell-v">' + esc(v) + '</div>';
-      profGrid.appendChild(cell);
-    });
-    profileSect.appendChild(profGrid);
-    body.appendChild(profileSect);
-
-    // ── CRM RAW DATA ──
+    // ── 2. CRM DATA + CALL NOTES ──
     if (s.crm || s.notes) {
-      const crmSect = document.createElement('div');
-      crmSect.className = 'sess-section';
-      const crmHead = document.createElement('div');
-      crmHead.className = 'sess-section-head';
-      crmHead.textContent = 'CRM Data & Call Notes';
-      crmSect.appendChild(crmHead);
+      const sec2 = mkSection('CRM Data & Call Notes');
       if (s.crm) {
-        const crmBox = document.createElement('div');
-        crmBox.className = 'sess-raw-box';
-        crmBox.textContent = s.crm + (s.crm.length >= 400 ? '…' : '');
-        crmSect.appendChild(crmBox);
+        const box = document.createElement('div');
+        box.className = 'sess-raw-box';
+        box.textContent = s.crm;
+        sec2.appendChild(box);
       }
       if (s.notes) {
-        const notesLabel = document.createElement('div');
-        notesLabel.className = 'sess-notes-label';
-        notesLabel.textContent = 'Call Notes';
-        const notesBox = document.createElement('div');
-        notesBox.className = 'sess-raw-box sess-notes';
-        notesBox.textContent = s.notes;
-        crmSect.appendChild(notesLabel);
-        crmSect.appendChild(notesBox);
+        const lbl = document.createElement('div');
+        lbl.className = 'sess-notes-label';
+        lbl.textContent = 'Call Notes';
+        const box2 = document.createElement('div');
+        box2.className = 'sess-raw-box';
+        box2.style.background = 'var(--s)';
+        box2.textContent = s.notes;
+        sec2.appendChild(lbl);
+        sec2.appendChild(box2);
       }
-      body.appendChild(crmSect);
+      body.appendChild(sec2);
     }
 
-    // ── INTELLIGENCE ──
-    if (score || obj || optDay || rebuttalHooks.length) {
-      const intelSect = document.createElement('div');
-      intelSect.className = 'sess-section';
-      const intelHead = document.createElement('div');
-      intelHead.className = 'sess-section-head';
-      intelHead.textContent = 'Lead Intelligence';
-      intelSect.appendChild(intelHead);
-
-      const intelGrid = document.createElement('div');
-      intelGrid.className = 'sess-intel-grid';
-
-      if (score) {
-        const cell = document.createElement('div');
-        cell.className = 'sess-intel-cell';
-        cell.innerHTML = '<div class="sess-cell-l">Sentiment</div><div class="sess-cell-v">' + esc(score+'/10 · '+(intel.sentiment_label||'')) + '</div>';
-        intelGrid.appendChild(cell);
+    // ── 3. INTELLIGENCE ──
+    if (score || obj || optDay || hooks.length) {
+      const sec3 = mkSection('Lead Intelligence');
+      const ig = document.createElement('div');
+      ig.className = 'sess-intel-grid';
+      if (score) { const c = mkICell('Sentiment Score', score + '/10 — ' + (intel.sentiment_label || ''), ''); ig.appendChild(c); }
+      if (obj)   { const c = mkICell('Primary Blocker', obj, objSum); ig.appendChild(c); }
+      if (optDay){ const c = mkICell('Best Window', optDay + (optHour ? ' · ' + optHour : ''), optReas); ig.appendChild(c); }
+      if (ig.children.length) sec3.appendChild(ig);
+      if (hooks.length) {
+        const rl = document.createElement('div'); rl.className = 'sess-reb-label'; rl.textContent = 'Rebuttal Hooks';
+        sec3.appendChild(rl);
+        hooks.forEach(r => { const d = document.createElement('div'); d.className = 'sess-reb-item'; d.textContent = r; sec3.appendChild(d); });
       }
-      if (obj) {
-        const cell = document.createElement('div');
-        cell.className = 'sess-intel-cell';
-        cell.innerHTML = '<div class="sess-cell-l">Primary Blocker</div><div class="sess-cell-v">' + esc(obj) + '</div>' + (objSum?'<div class="sess-cell-s">'+esc(objSum)+'</div>':'');
-        intelGrid.appendChild(cell);
-      }
-      if (optDay) {
-        const cell = document.createElement('div');
-        cell.className = 'sess-intel-cell';
-        cell.innerHTML = '<div class="sess-cell-l">Best Window</div><div class="sess-cell-v">' + esc(optDay+(optHour?' · '+optHour:'')) + '</div>' + (optReason?'<div class="sess-cell-s">'+esc(optReason)+'</div>':'');
-        intelGrid.appendChild(cell);
-      }
-      if (intelGrid.children.length) intelSect.appendChild(intelGrid);
-
-      if (rebuttalHooks.length) {
-        const rebLabel = document.createElement('div');
-        rebLabel.className = 'sess-reb-label';
-        rebLabel.textContent = 'Rebuttal Hooks';
-        intelSect.appendChild(rebLabel);
-        rebuttalHooks.forEach(r => {
-          const rb = document.createElement('div');
-          rb.className = 'sess-reb-item';
-          rb.textContent = r;
-          intelSect.appendChild(rb);
-        });
-      }
-      body.appendChild(intelSect);
+      body.appendChild(sec3);
     }
 
-    // ── MESSAGES ──
-    const msgsSect = document.createElement('div');
-    msgsSect.className = 'sess-section';
-    const msgsHead = document.createElement('div');
-    msgsHead.className = 'sess-section-head';
-    msgsHead.style.cssText = 'display:flex;align-items:center;justify-content:space-between;';
-    msgsHead.innerHTML = '<span>5 Follow-up Messages</span>';
-
-    // Copy All for this session
-    const copyAllBtn = document.createElement('button');
-    copyAllBtn.className = 's-copy-all-btn';
-    copyAllBtn.textContent = 'Copy All';
-    copyAllBtn.onclick = (e) => {
-      e.stopPropagation();
-      const header = name ? 'Lead: ' + name + '\n\n' : '';
-      const body2 = msgs.map((m, i) => {
-        const trg = trigs[i] ? ' [' + trigs[i] + ']' : '';
-        return '--- Message ' + (i+1) + ': ' + MSG_LABELS[i] + trg + ' ---\n' + m;
-      }).join('\n\n');
-      navigator.clipboard.writeText(header + body2).then(() => {
-        copyAllBtn.textContent = 'Copied!';
-        setTimeout(() => copyAllBtn.textContent = 'Copy All', 2000);
-        showToast('All messages copied', 'success');
-      }).catch(() => showToast('Copy failed', 'error'));
-    };
-    msgsHead.appendChild(copyAllBtn);
-    msgsSect.appendChild(msgsHead);
-
-    msgs.forEach((m, i) => {
-      const trg = trigs[i] || '';
-      const msgCard = document.createElement('div');
-      msgCard.className = 'sess-msg-card';
-
-      const msgHead = document.createElement('div');
-      msgHead.className = 'sess-msg-head';
-      const numBadge = document.createElement('span');
-      numBadge.className = 'sess-msg-num';
-      numBadge.textContent = i + 1;
-      const labelSpan = document.createElement('span');
-      labelSpan.className = 'sess-msg-label';
-      labelSpan.textContent = 'Message ' + (i+1) + ' — ' + MSG_LABELS[i];
-      msgHead.appendChild(numBadge);
-      msgHead.appendChild(labelSpan);
-      if (trg) {
-        const trigSpan = document.createElement('span');
-        trigSpan.className = 'sess-msg-trigger';
-        trigSpan.textContent = trg;
-        msgHead.appendChild(trigSpan);
-      }
-
-      // Copy individual
-      const copyBtn = document.createElement('button');
-      copyBtn.className = 's-copy-btn';
-      copyBtn.textContent = 'Copy';
-      copyBtn.onclick = (e) => {
+    // ── 4. MESSAGES ──
+    if (msgs.length) {
+      const msgsHead = mkSection('Follow-up Messages — ' + (sent >= msgs.length ? 'All sent' : 'Next: Message ' + (sent + 1)));
+      // Copy all btn in section head
+      const secHead = msgsHead.querySelector('.sess-section-head');
+      const caBtn = document.createElement('button');
+      caBtn.className = 's-copy-all-btn';
+      caBtn.textContent = 'Copy All';
+      caBtn.onclick = (e) => {
         e.stopPropagation();
-        navigator.clipboard.writeText(m).then(() => {
-          copyBtn.textContent = 'Copied';
-          copyBtn.classList.add('copied');
-          setTimeout(() => { copyBtn.textContent = 'Copy'; copyBtn.classList.remove('copied'); }, 2000);
+        const header = name ? 'Lead: ' + name + '\n\n' : '';
+        const body2 = msgs.map((m, i) => {
+          const trg = trigs[i] ? ' [' + trigs[i] + ']' : '';
+          return '--- Message ' + (i+1) + ': ' + MSG_LABELS[i] + trg + ' ---\n' + m;
+        }).join('\n\n');
+        navigator.clipboard.writeText(header + body2).then(() => {
+          caBtn.textContent = 'Copied!';
+          setTimeout(() => caBtn.textContent = 'Copy All', 2000);
+          showToast('All messages copied', 'success');
         }).catch(() => showToast('Copy failed', 'error'));
       };
-      msgHead.appendChild(copyBtn);
-      msgCard.appendChild(msgHead);
+      if (secHead) secHead.appendChild(caBtn);
 
-      const msgBody = document.createElement('div');
-      msgBody.className = 'sess-msg-body';
-      msgBody.textContent = m; // textContent — no HTML injection, no escaping issues
-      msgCard.appendChild(msgBody);
-      msgsSect.appendChild(msgCard);
-    });
+      msgs.forEach((m, i) => {
+        const trg    = trigs[i] || '';
+        const isSent = i < sent;
+        const isNext = i === nextMsg;
 
-    body.appendChild(msgsSect);
+        const mc = document.createElement('div');
+        mc.className = 'sess-msg-card' + (isSent ? ' sess-msg-sent' : '') + (isNext ? ' sess-msg-next' : '');
+
+        const mh = document.createElement('div');
+        mh.className = 'sess-msg-head';
+
+        const mn = document.createElement('span');
+        mn.className = 'sess-msg-num' + (isSent ? ' sent' : isNext ? ' next' : '');
+        mn.textContent = isSent ? '✓' : i + 1;
+        mh.appendChild(mn);
+
+        const ml2 = document.createElement('span');
+        ml2.className = 'sess-msg-label';
+        ml2.textContent = 'Message ' + (i+1) + ' — ' + MSG_LABELS[i];
+        mh.appendChild(ml2);
+
+        if (isNext) {
+          const np = document.createElement('span');
+          np.className = 'sess-next-badge';
+          np.textContent = 'Next to send';
+          mh.appendChild(np);
+        }
+        if (isSent) {
+          const sp = document.createElement('span');
+          sp.className = 'sess-sent-badge';
+          sp.textContent = 'Sent';
+          mh.appendChild(sp);
+        }
+        if (trg) {
+          const tb = document.createElement('span');
+          tb.className = 'sess-msg-trigger';
+          tb.textContent = trg;
+          mh.appendChild(tb);
+        }
+
+        // Copy button
+        const cp = document.createElement('button');
+        cp.className = 's-copy-btn' + (isNext ? ' next-copy' : '');
+        cp.textContent = isNext ? 'Copy & Mark Sent' : 'Copy';
+        cp.onclick = (e) => {
+          e.stopPropagation();
+          navigator.clipboard.writeText(m).then(() => {
+            cp.textContent = 'Copied!';
+            cp.classList.add('copied');
+            if (isNext) {
+              markMessageSent(s.id);
+            }
+            setTimeout(() => { cp.textContent = isNext ? 'Copy & Mark Sent' : 'Copy'; cp.classList.remove('copied'); }, 2000);
+            showToast('Message ' + (i+1) + ' copied', 'success');
+          }).catch(() => showToast('Copy failed', 'error'));
+        };
+        mh.appendChild(cp);
+        mc.appendChild(mh);
+
+        const mb = document.createElement('div');
+        mb.className = 'sess-msg-body';
+        mb.textContent = m;
+        mc.appendChild(mb);
+        msgsHead.appendChild(mc);
+      });
+      body.appendChild(msgsHead);
+    }
+
     item.appendChild(body);
     list.appendChild(item);
   });
+}
+
+function mkSection(title) {
+  const sec = document.createElement('div');
+  sec.className = 'sess-section';
+  const h = document.createElement('div');
+  h.className = 'sess-section-head';
+  h.textContent = title;
+  sec.appendChild(h);
+  return sec;
+}
+
+function mkICell(label, val, sub) {
+  const c = document.createElement('div');
+  c.className = 'sess-intel-cell';
+  c.innerHTML = '<div class="sess-cell-l">' + label + '</div><div class="sess-cell-v">' + val + '</div>' + (sub ? '<div class="sess-cell-s">' + sub + '</div>' : '');
+  return c;
 }
 
 function toggleSession(headEl){
