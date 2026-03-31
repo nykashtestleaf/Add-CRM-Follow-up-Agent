@@ -348,7 +348,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .session-meta { font-size: 10px; color: var(--muted2); margin-top: 3px; }
 .session-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
 .session-toggle { font-size: 10px; color: var(--muted2); transition: transform 0.2s; display: inline-block; }
-.session-item.expanded .session-toggle { transform: rotate(180deg); }
+.session-item.expanded .session-toggle { transform: rotate(180deg); display: inline-block; }
 
 .session-badges { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
 .s-badge {
@@ -364,11 +364,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
 /* ── SESSION BODY ── */
 .session-body {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.35s ease;
+  display: none;
 }
-.session-item.expanded .session-body { max-height: 6000px; }
+.session-item.expanded .session-body {
+  display: block;
+  animation: bodyReveal 0.2s ease;
+}
+@keyframes bodyReveal {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 
 /* ── SESSION BODY SECTIONS ── */
@@ -1169,13 +1174,17 @@ function renderDrawer(){
     head.appendChild(headR);
 
     // Click anywhere on head to toggle
+    head.style.cursor = 'pointer';
     head.onclick = () => {
+      const isOpen = item.classList.contains('expanded');
+      // Close all others first
       document.querySelectorAll('.session-item.expanded').forEach(el => {
-        if (el !== item) el.classList.remove('expanded');
+        el.classList.remove('expanded');
       });
-      item.classList.toggle('expanded');
-      if (item.classList.contains('expanded')) {
-        setTimeout(() => item.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+      // Toggle this one
+      if (!isOpen) {
+        item.classList.add('expanded');
+        setTimeout(() => item.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
       }
     };
     item.appendChild(head);
@@ -1354,13 +1363,11 @@ function mkICell(label, val, sub) {
 
 function toggleSession(headEl){
   const item = headEl.closest('.session-item');
-  // Close all others
-  document.querySelectorAll('.session-item.expanded').forEach(el => {
-    if (el !== item) el.classList.remove('expanded');
-  });
-  item.classList.toggle('expanded');
-  // Scroll item into view
-  if (item.classList.contains('expanded')) {
+  if (!item) return;
+  const isOpen = item.classList.contains('expanded');
+  document.querySelectorAll('.session-item.expanded').forEach(el => el.classList.remove('expanded'));
+  if (!isOpen) {
+    item.classList.add('expanded');
     setTimeout(() => item.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
   }
 }
