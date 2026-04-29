@@ -223,8 +223,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   background: var(--s2);
   border: 1px solid var(--border2);
   border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 12px; font-weight: 600;
   font-family: var(--font);
   color: var(--muted);
   cursor: pointer;
@@ -236,19 +235,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .sessions-count {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 18px; height: 18px;
-  background: var(--accent);
-  color: #fff;
-  border-radius: 9px;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 0 5px;
+  background: var(--accent); color: #fff;
+  border-radius: 9px; font-size: 10px; font-weight: 700; padding: 0 5px;
 }
 
 /* ── SESSIONS OVERLAY + DRAWER ── */
 .sessions-overlay {
   position: fixed; inset: 0;
   background: rgba(15,22,35,0.4);
-  backdrop-filter: blur(2px);
   z-index: 8000;
   opacity: 0; pointer-events: none;
   transition: opacity 0.25s;
@@ -259,12 +253,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   position: fixed;
   top: 0; right: 0; bottom: 0;
   width: 520px;
-  background: var(--s);
-  border-left: 1px solid var(--border);
+  background: #fff;
+  border-left: 1px solid #e4e7ec;
   box-shadow: -8px 0 40px rgba(0,0,0,0.14);
   z-index: 8001;
-  display: flex;
-  flex-direction: column;
+  display: flex; flex-direction: column;
   transform: translateX(100%);
   transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
 }
@@ -272,378 +265,37 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
 .drawer-head {
   padding: 15px 18px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid #e4e7ec;
   display: flex; align-items: flex-start; justify-content: space-between;
-  flex-shrink: 0;
-  background: var(--s2);
+  flex-shrink: 0; background: #f8f9fb;
 }
-.drawer-title { font-size: 14px; font-weight: 700; letter-spacing: -0.2px; color: var(--text); }
-.drawer-sub   { font-size: 11px; color: var(--muted2); margin-top: 2px; }
-.drawer-actions { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+.drawer-title { font-size: 14px; font-weight: 700; color: #0f1623; }
+.drawer-sub   { font-size: 11px; color: #9aa0b2; margin-top: 2px; }
+.drawer-actions { display: flex; align-items: center; gap: 7px; }
 .btn-drawer-close {
-  width: 28px; height: 28px;
-  background: var(--s); border: 1px solid var(--border);
-  border-radius: 6px; cursor: pointer;
+  width: 28px; height: 28px; background: #fff;
+  border: 1px solid #e4e7ec; border-radius: 6px;
+  cursor: pointer; font-size: 13px; color: #5c6479;
   display: flex; align-items: center; justify-content: center;
-  font-size: 13px; color: var(--muted);
-  transition: all 0.13s;
 }
-.btn-drawer-close:hover { background: var(--s3); color: var(--text); }
+.btn-drawer-close:hover { background: #f1f3f6; color: #0f1623; }
 .btn-clear-sessions {
-  padding: 4px 10px;
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  font-size: 11px; font-weight: 500;
-  font-family: var(--font);
-  color: var(--muted);
-  cursor: pointer;
-  transition: all 0.13s;
+  padding: 4px 10px; background: none;
+  border: 1px solid #e4e7ec; border-radius: 5px;
+  font-size: 11px; font-weight: 500; font-family: inherit;
+  color: #5c6479; cursor: pointer;
 }
-.btn-clear-sessions:hover { border-color: var(--red); color: var(--red); }
+.btn-clear-sessions:hover { border-color: #b91c1c; color: #b91c1c; }
 
 .drawer-list {
-  flex: 1;
-  overflow-y: auto;
+  flex: 1; overflow-y: auto;
   padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: flex; flex-direction: column; gap: 10px;
 }
 .drawer-list::-webkit-scrollbar { width: 3px; }
-.drawer-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.drawer-list::-webkit-scrollbar-thumb { background: #cdd1da; border-radius: 2px; }
 
-.drawer-empty {
-  padding: 48px 20px;
-  text-align: center;
-  color: var(--muted2);
-  font-size: 13px;
-  line-height: 1.7;
-}
-
-/* ── SESSION ITEM ── */
-.session-item {
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  overflow: hidden;
-  background: var(--s);
-  transition: border-color 0.14s, box-shadow 0.14s;
-}
-.session-item:hover { border-color: var(--border2); }
-.session-item.expanded { border-color: var(--accent-bd); box-shadow: 0 2px 12px rgba(26,86,219,0.07); }
-
-.session-head {
-  padding: 11px 14px;
-  background: var(--s2);
-  display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 10px;
-  cursor: pointer;
-  user-select: none;
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.14s;
-}
-.session-item.expanded .session-head { border-bottom-color: var(--border); }
-.session-name { font-size: 13px; font-weight: 600; color: var(--text); }
-.session-course { font-size: 11px; color: var(--accent); font-weight: 500; margin-top: 1px; }
-.session-meta { font-size: 10px; color: var(--muted2); margin-top: 3px; }
-.session-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
-.session-toggle { font-size: 10px; color: var(--muted2); transition: transform 0.2s; display: inline-block; }
-.session-item.expanded .session-toggle { transform: rotate(180deg); display: inline-block; }
-
-.session-badges { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
-.s-badge {
-  padding: 2px 7px; border-radius: 4px;
-  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
-}
-.s-tone   { background: var(--s3);        color: var(--muted);  border: 1px solid var(--border2); }
-.s-psy    { background: var(--purple-bg);  color: var(--purple); border: 1px solid var(--purple-bd); }
-.s-score  { background: var(--accent-bg);  color: var(--accent); border: 1px solid var(--accent-bd); }
-.s-warm   { background: var(--amber-bg);   color: var(--amber);  border: 1px solid #f59e0b44; }
-.s-hot    { background: #fee2e2;            color: var(--red);    border: 1px solid #f8717144; }
-.s-cold   { background: var(--accent-bg);  color: var(--accent); border: 1px solid var(--accent-bd); }
-
-/* ── SESSION BODY ── */
-.session-body {
-  display: none;
-}
-.session-item.expanded .session-body {
-  display: block;
-  animation: bodyReveal 0.2s ease;
-}
-@keyframes bodyReveal {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-
-/* ── SESSION BODY SECTIONS ── */
-.sess-section {
-  border-bottom: 1px solid var(--border);
-}
-.sess-section:last-child { border-bottom: none; }
-
-.sess-section-head {
-  padding: 8px 14px;
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .7px;
-  color: var(--muted2);
-  background: var(--s3);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* Profile grid */
-.sess-profile-grid {
-  display: grid;
-  grid-template-columns: repeat(3,1fr);
-  border-bottom: none;
-}
-.sess-profile-cell {
-  padding: 9px 14px;
-  border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-.sess-profile-cell:nth-child(3n) { border-right: none; }
-.sess-cell-l {
-  font-size: 9px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .5px; color: var(--muted2); margin-bottom: 3px;
-}
-.sess-cell-v { font-size: 12px; font-weight: 600; color: var(--text); }
-.sess-cell-s { font-size: 10px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
-
-/* CRM raw boxes */
-.sess-raw-box {
-  padding: 10px 14px;
-  font-size: 11px;
-  font-family: var(--mono);
-  color: var(--muted);
-  line-height: 1.7;
-  white-space: pre-wrap;
-  word-break: break-word;
-  background: var(--s2);
-  border-bottom: 1px solid var(--border);
-}
-.sess-notes { background: var(--s); border-top: 1px dashed var(--border); }
-.sess-notes-label {
-  padding: 5px 14px 3px;
-  font-size: 9px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .5px; color: var(--muted2);
-  background: var(--s2);
-}
-
-/* Intelligence grid */
-.sess-intel-grid {
-  display: grid;
-  grid-template-columns: repeat(3,1fr);
-}
-.sess-intel-cell {
-  padding: 10px 14px;
-  border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-.sess-intel-cell:last-child { border-right: none; }
-
-/* Rebuttal hooks */
-.sess-reb-label {
-  padding: 7px 14px 4px;
-  font-size: 9px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .5px; color: var(--muted2);
-  background: var(--s2);
-}
-.sess-reb-item {
-  padding: 7px 14px;
-  font-size: 12px; color: var(--text);
-  background: var(--s2);
-  border-top: 1px solid var(--border);
-  border-left: 3px solid var(--accent-bd);
-  line-height: 1.5;
-}
-
-/* Message cards inside session */
-.sess-msg-card {
-  border-bottom: 1px solid var(--border);
-}
-.sess-msg-card:last-child { border-bottom: none; }
-.sess-msg-head {
-  padding: 8px 12px;
-  display: flex; align-items: center; gap: 7px;
-  background: var(--s2);
-  border-bottom: 1px solid var(--border);
-}
-.sess-msg-num {
-  width: 18px; height: 18px;
-  background: var(--text); color: #fff;
-  border-radius: 4px; font-size: 10px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono); flex-shrink: 0;
-}
-.sess-msg-label { font-size: 11px; font-weight: 600; color: var(--text); flex: 1; }
-.sess-msg-trigger {
-  padding: 1px 6px;
-  background: var(--purple-bg); color: var(--purple);
-  border: 1px solid var(--purple-bd);
-  border-radius: 3px; font-size: 9px; font-weight: 700; text-transform: uppercase;
-}
-.sess-msg-body {
-  padding: 12px 14px;
-  font-size: 13px;
-  line-height: 1.8;
-  color: var(--text);
-  white-space: pre-wrap;
-  word-break: break-word;
-  background: var(--s);
-}
-.s-copy-btn {
-  margin-left: auto;
-  flex-shrink: 0;
-  padding: 4px 11px;
-  background: var(--s);
-  border: 1px solid var(--border2);
-  border-radius: 5px;
-  font-size: 11px; font-weight: 600;
-  font-family: var(--font);
-  color: var(--muted);
-  cursor: pointer;
-  transition: all 0.13s;
-}
-.s-copy-btn:hover  { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
-.s-copy-btn.copied { border-color: var(--green);  color: var(--green);  background: var(--green-bg); }
-.s-copy-all-btn {
-  padding: 3px 10px;
-  background: none;
-  border: 1px solid var(--border2);
-  border-radius: 5px;
-  font-size: 10px; font-weight: 600;
-  font-family: var(--font);
-  color: var(--muted);
-  cursor: pointer;
-  transition: all 0.13s;
-}
-.s-copy-all-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
-
-@media (max-width: 600px) {
-  .sess-profile-grid { grid-template-columns: 1fr 1fr; }
-  .sess-intel-grid   { grid-template-columns: 1fr; }
-  .sess-intel-cell   { border-right: none; }
-}
-
-
-/* ── SESSION PROGRESS + MESSAGE STATES ── */
-.sess-progress-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 9px;
-  border-radius: 20px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .3px;
-  background: var(--s3);
-  color: var(--muted);
-  border: 1px solid var(--border2);
-  white-space: nowrap;
-}
-.sess-progress-pill.sess-partial {
-  background: #fef3c7;
-  color: var(--amber);
-  border-color: #f59e0b44;
-}
-.sess-progress-pill.sess-done {
-  background: var(--green-bg);
-  color: var(--green);
-  border-color: var(--green-bd);
-}
-
-/* Next message highlight */
-.sess-msg-card { border-bottom: 1px solid var(--border); background: var(--s); }
-.sess-msg-card:last-child { border-bottom: none; }
-.sess-msg-card.sess-msg-sent { opacity: 0.5; }
-.sess-msg-card.sess-msg-next {
-  border-left: 3px solid var(--accent);
-  background: var(--accent-bg);
-}
-.sess-msg-head {
-  padding: 8px 12px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  flex-wrap: wrap;
-  border-bottom: 1px solid var(--border);
-  background: rgba(0,0,0,0.02);
-}
-.sess-msg-card.sess-msg-next .sess-msg-head { background: rgba(26,86,219,0.04); }
-.sess-msg-num {
-  width: 20px; height: 20px;
-  background: var(--text); color: #fff;
-  border-radius: 4px; font-size: 10px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono); flex-shrink: 0;
-}
-.sess-msg-num.sent { background: var(--green); }
-.sess-msg-num.next { background: var(--accent); }
-.sess-msg-label { font-size: 11px; font-weight: 600; color: var(--text); flex: 1; }
-.sess-msg-trigger {
-  padding: 1px 6px;
-  background: var(--purple-bg); color: var(--purple);
-  border: 1px solid var(--purple-bd);
-  border-radius: 3px; font-size: 9px; font-weight: 700; text-transform: uppercase;
-}
-.sess-next-badge {
-  padding: 2px 7px;
-  background: var(--accent-bg); color: var(--accent);
-  border: 1px solid var(--accent-bd);
-  border-radius: 4px; font-size: 9px; font-weight: 700;
-}
-.sess-sent-badge {
-  padding: 2px 7px;
-  background: var(--green-bg); color: var(--green);
-  border: 1px solid var(--green-bd);
-  border-radius: 4px; font-size: 9px; font-weight: 700;
-}
-.sess-msg-body {
-  padding: 12px 14px;
-  font-size: 13px;
-  line-height: 1.8;
-  color: var(--text);
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-.s-copy-btn {
-  margin-left: auto;
-  flex-shrink: 0;
-  padding: 4px 12px;
-  background: var(--s);
-  border: 1px solid var(--border2);
-  border-radius: 5px;
-  font-size: 11px; font-weight: 600;
-  font-family: var(--font);
-  color: var(--muted);
-  cursor: pointer;
-  transition: all 0.13s;
-}
-.s-copy-btn:hover  { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
-.s-copy-btn.copied { border-color: var(--green);  color: var(--green);  background: var(--green-bg); }
-.s-copy-btn.next-copy {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-}
-.s-copy-btn.next-copy:hover { background: #1447c0; border-color: #1447c0; }
-.s-copy-all-btn {
-  padding: 3px 10px;
-  background: none;
-  border: 1px solid var(--border2);
-  border-radius: 5px;
-  font-size: 10px; font-weight: 600;
-  font-family: var(--font);
-  color: var(--muted);
-  cursor: pointer;
-  transition: all 0.13s;
-}
-.s-copy-all-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+@media (max-width: 800px) { .sessions-drawer { width: 100%; } }
 
 </style>
 </head>
@@ -1001,407 +653,352 @@ function copyAndRevealNext(btn){
 function copyOne(btn){const i=parseInt(btn.dataset.i),text=allMessages[i]||'';navigator.clipboard.writeText(text).then(()=>{btn.textContent='Copied';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy Message';btn.classList.remove('copied');},2000);}).catch(()=>showToast('Copy failed','error'));}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
 
+
 /* ── SESSION STORAGE ── */
 const SESSIONS_KEY = 'crm_sessions';
-/* ── GET / SAVE ── */
-function getSessions(){
+
+function getSessions() {
   try { return JSON.parse(localStorage.getItem(SESSIONS_KEY) || '[]'); }
-  catch { return []; }
+  catch(e) { return []; }
 }
 
-function saveSession(parsed){
-  const sessions = getSessions();
-  const lead = parsed.lead || {};
-  const intel = parsed.intelligence || {};
-  const entry = {
+function saveSession(parsed) {
+  var sessions = getSessions();
+  var lead = parsed.lead || {};
+  var entry = {
     id:           Date.now(),
-    ts:           new Date().toLocaleString('en-IN', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}),
+    ts:           new Date().toLocaleString('en-IN', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}),
     lead:         lead,
-    messages:     parsed.messages  || [],
-    triggers:     parsed.triggers  || [],
-    intelligence: intel,
+    messages:     parsed.messages || [],
+    triggers:     parsed.triggers || [],
+    intelligence: parsed.intelligence || {},
     tone:         selTone,
     status:       selStatus,
-    psy:          [...selPsy],
-    crm:          (document.getElementById('crmData').value   || '').trim().slice(0, 600),
+    psy:          Array.from(selPsy),
+    crm:          (document.getElementById('crmData').value || '').trim().slice(0, 600),
     notes:        (document.getElementById('callNotes').value || '').trim().slice(0, 400),
     sentCount:    0,
   };
-  // Check if lead already exists (same name+company) — update instead of duplicate
-  const existIdx = sessions.findIndex(s =>
-    s.lead && s.lead.name && lead.name &&
-    s.lead.name.trim().toLowerCase() === lead.name.trim().toLowerCase() &&
-    (s.lead.company||'').toLowerCase() === (lead.company||'').toLowerCase()
-  );
+  var existIdx = sessions.findIndex(function(s) {
+    return s.lead && lead.name &&
+      (s.lead.name || '').toLowerCase() === (lead.name || '').toLowerCase() &&
+      (s.lead.company || '').toLowerCase() === (lead.company || '').toLowerCase();
+  });
   if (existIdx !== -1) {
-    entry.sentCount = sessions[existIdx].sentCount || 0; // preserve sent progress
+    entry.sentCount = sessions[existIdx].sentCount || 0;
     sessions.splice(existIdx, 1);
   }
   sessions.unshift(entry);
   if (sessions.length > 60) sessions.pop();
-  try {
-    localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
-  } catch(e) {
-    sessions.pop();
-    localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
-  }
+  try { localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions)); } catch(e) {}
   updateSessionsCount();
 }
 
-function markMessageSent(sessionId){
-  const sessions = getSessions();
-  const s = sessions.find(x => x.id === sessionId);
-  if (!s) return;
-  s.sentCount = Math.min((s.sentCount||0) + 1, s.messages.length);
-  localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
-  renderDrawer(); // refresh drawer
+function updateSessionsCount() {
+  var el = document.getElementById('sessions-count');
+  if (el) el.textContent = getSessions().length;
 }
 
-function updateSessionsCount(){
-  const n  = getSessions().length;
-  const el = document.getElementById('sessions-count');
-  if (el) el.textContent = n;
-}
-
-/* ── DRAWER OPEN / CLOSE ── */
-function openSessions(){
+function openSessions() {
   renderDrawer();
   document.getElementById('sessions-overlay').classList.add('open');
   document.getElementById('sessions-drawer').classList.add('open');
 }
-function closeSessions(){
+
+function closeSessions() {
   document.getElementById('sessions-overlay').classList.remove('open');
   document.getElementById('sessions-drawer').classList.remove('open');
 }
-function clearAllSessions(){
-  if (!confirm('Clear all session history? This cannot be undone.')) return;
+
+function clearAllSessions() {
+  if (!confirm('Clear all session history?')) return;
   localStorage.removeItem(SESSIONS_KEY);
   updateSessionsCount();
   renderDrawer();
   showToast('Session history cleared', '');
 }
 
-/* ── RENDER DRAWER ── */
-function renderDrawer(){
-  const list     = document.getElementById('drawer-list');
-  const sub      = document.getElementById('drawer-sub');
-  const sessions = getSessions();
-  if (!list || !sub) return;
+function renderDrawer() {
+  var list = document.getElementById('drawer-list');
+  var sub  = document.getElementById('drawer-sub');
+  if (!list) return;
 
-  sub.textContent = sessions.length + ' lead' + (sessions.length !== 1 ? 's' : '') + ' saved';
-  list.innerHTML  = '';
+  var sessions = getSessions();
+  sub.textContent = sessions.length + (sessions.length === 1 ? ' lead' : ' leads') + ' saved';
+  list.innerHTML = '';
 
   if (!sessions.length) {
-    list.innerHTML = '<div class="drawer-empty">No sessions yet.<br>Generate messages for a lead to build history.</div>';
+    list.innerHTML = '<div style="padding:48px 20px;text-align:center;color:#9aa0b2;font-size:13px;line-height:1.8;">No sessions yet.<br>Generate messages for a lead to build history.</div>';
     return;
   }
 
-  sessions.forEach((s) => {
-    const lead  = s.lead  || {};
-    const intel = s.intelligence || {};
-    const msgs  = s.messages || [];
-    const trigs = s.triggers  || [];
-    const sent  = s.sentCount || 0;
-    const nextMsg = sent < msgs.length ? sent : -1; // index of next unsent
+  sessions.forEach(function(s) {
+    var lead  = s.lead || {};
+    var intel = s.intelligence || {};
+    var msgs  = s.messages || [];
+    var trigs = s.triggers  || [];
+    var sent  = s.sentCount || 0;
+    var nextIdx = (sent < msgs.length) ? sent : -1;
 
-    const name    = lead.name    || 'Unknown Lead';
-    const company = lead.company || '';
-    const course  = lead.course  || lead.designation || '';
-    const phone   = lead.phone   || '';
-    const ctc     = lead.ctc     || '';
-    const exp     = lead.experience_years || '';
-    const sl      = (intel.sentiment_label || '').toLowerCase();
-    const score   = intel.sentiment_score  || '';
-    const obj     = intel.objection_type   || '';
-    const objSum  = intel.objection_summary|| '';
-    const hooks   = intel.rebuttal_hooks   || [];
-    const optDay  = intel.optimal_day      || '';
-    const optHour = intel.optimal_hour     || '';
-    const optReas = intel.optimal_reason   || '';
+    var name    = lead.name    || 'Unknown Lead';
+    var company = lead.company || '';
+    var course  = lead.course  || lead.designation || '';
+    var phone   = lead.phone   || '';
+    var ctc     = lead.ctc     || '';
+    var exp     = lead.experience_years || '';
+    var score   = intel.sentiment_score  || '';
+    var sl      = (intel.sentiment_label || '').toLowerCase();
+    var obj     = intel.objection_type   || '';
+    var objSum  = intel.objection_summary || '';
+    var hooks   = intel.rebuttal_hooks   || [];
+    var optDay  = intel.optimal_day  || '';
+    var optHour = intel.optimal_hour || '';
+    var optReas = intel.optimal_reason || '';
 
-    // ── ITEM WRAPPER ──
-    const item = document.createElement('div');
-    item.className = 'session-item';
+    var progText  = sent === 0 ? 'Not started' : (sent >= msgs.length ? 'All sent' : sent + '/' + msgs.length + ' sent');
+    var progColor = sent === 0 ? '#9aa0b2' : (sent >= msgs.length ? '#0d7a45' : '#92400e');
 
-    // ── HEADER ──
-    const head = document.createElement('div');
-    head.className = 'session-head';
+    // Wrapper
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'border:1px solid #e4e7ec;border-radius:8px;overflow:hidden;';
 
-    const headL = document.createElement('div');
-    headL.style.cssText = 'flex:1;min-width:0;overflow:hidden;';
+    // ── HEADER BUTTON ──
+    var hBtn = document.createElement('button');
+    hBtn.type = 'button';
+    hBtn.style.cssText = [
+      'width:100%', 'text-align:left', 'background:#f8f9fb',
+      'border:none', 'border-bottom:1px solid #e4e7ec', 'padding:12px 14px',
+      'cursor:pointer', 'display:block', 'font-family:inherit'
+    ].join(';');
 
-    const nameRow = document.createElement('div');
-    nameRow.className = 'session-name';
-    nameRow.textContent = name + (company ? ' · ' + company : '');
-    headL.appendChild(nameRow);
+    var topRow = document.createElement('div');
+    topRow.style.cssText = 'display:flex;align-items:flex-start;justify-content:space-between;gap:8px;pointer-events:none;';
 
-    if (course) {
-      const cr = document.createElement('div');
-      cr.className = 'session-course';
-      cr.textContent = course;
-      headL.appendChild(cr);
-    }
+    var leftDiv = document.createElement('div');
+    leftDiv.style.cssText = 'flex:1;min-width:0;pointer-events:none;';
+    leftDiv.innerHTML =
+      '<div style="font-size:13px;font-weight:600;color:#0f1623;margin-bottom:2px;">' + e2(name) + (company ? ' · ' + e2(company) : '') + '</div>' +
+      (course ? '<div style="font-size:11px;color:#1a56db;margin-bottom:2px;">' + e2(course) + '</div>' : '') +
+      '<div style="font-size:10px;color:#9aa0b2;">' + e2(s.ts) + ' · ' + e2(s.tone || 'Professional') + ' · ' + (s.status === 'not-picked' ? 'Not Picked' : 'Call Done') + '</div>';
 
-    const meta = document.createElement('div');
-    meta.className = 'session-meta';
-    meta.textContent = s.ts + ' · ' + (s.tone || 'Professional') + ' · ' + (s.status === 'not-picked' ? 'Not Picked' : 'Call Done');
-    headL.appendChild(meta);
-    head.appendChild(headL);
+    var rightDiv = document.createElement('div');
+    rightDiv.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;pointer-events:none;';
 
-    const headR = document.createElement('div');
-    headR.className = 'session-right';
+    var progSpan = document.createElement('span');
+    progSpan.style.cssText = 'font-size:11px;font-weight:700;color:' + progColor + ';';
+    progSpan.textContent = progText + '  ▾';
+    rightDiv.appendChild(progSpan);
 
-    // Progress pill
-    const prog = document.createElement('div');
-    prog.className = 'sess-progress-pill' + (sent >= msgs.length ? ' sess-done' : sent > 0 ? ' sess-partial' : '');
-    prog.textContent = sent >= msgs.length ? 'All Sent' : sent > 0 ? 'Msg ' + sent + ' of ' + msgs.length + ' sent' : 'Not started';
-    headR.appendChild(prog);
+    var badgeRow = document.createElement('div');
+    badgeRow.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;';
+    if (score) badgeRow.appendChild(mkBadge(score + '/10', '#eff4ff', '#1a56db', '#c3d3f7'));
+    if (sl)    badgeRow.appendChild(mkBadge(intel.sentiment_label, sl==='hot'?'#fee2e2':sl==='warm'?'#fef3c7':'#eff4ff', sl==='hot'?'#b91c1c':sl==='warm'?'#92400e':'#1a56db', sl==='hot'?'#fca5a5':sl==='warm'?'#fcd34d':'#c3d3f7'));
+    (s.psy || []).slice(0, 3).forEach(function(p) { badgeRow.appendChild(mkBadge(p, '#f0ebff', '#5b21b6', '#c4b0f5')); });
+    rightDiv.appendChild(badgeRow);
 
-    const tog = document.createElement('span');
-    tog.className = 'session-toggle';
-    tog.textContent = '▾';
-    headR.appendChild(tog);
-
-    // Badges row
-    const badgeRow = document.createElement('div');
-    badgeRow.className = 'session-badges';
-    if (score) { const b = document.createElement('span'); b.className = 's-badge s-score'; b.textContent = score + '/10'; badgeRow.appendChild(b); }
-    if (sl)    { const b = document.createElement('span'); b.className = 's-badge s-' + (sl === 'hot' ? 'hot' : sl === 'warm' ? 'warm' : 'cold'); b.textContent = intel.sentiment_label; badgeRow.appendChild(b); }
-    (s.psy || []).slice(0, 2).forEach(p => {
-      const b = document.createElement('span'); b.className = 's-badge s-psy'; b.textContent = p; badgeRow.appendChild(b);
-    });
-    headR.appendChild(badgeRow);
-    head.appendChild(headR);
-
-    // Click anywhere on head to toggle
-    head.style.cursor = 'pointer';
-    head.onclick = () => {
-      const isOpen = item.classList.contains('expanded');
-      // Close all others first
-      document.querySelectorAll('.session-item.expanded').forEach(el => {
-        el.classList.remove('expanded');
-      });
-      // Toggle this one
-      if (!isOpen) {
-        item.classList.add('expanded');
-        setTimeout(() => item.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
-      }
-    };
-    item.appendChild(head);
+    topRow.appendChild(leftDiv);
+    topRow.appendChild(rightDiv);
+    hBtn.appendChild(topRow);
 
     // ── BODY ──
-    const body = document.createElement('div');
-    body.className = 'session-body';
+    var body = document.createElement('div');
+    body.style.cssText = 'display:none;border-top:1px solid #e4e7ec;';
 
-    // ── 1. LEAD PROFILE ──
-    const sec1 = mkSection('Lead Profile');
-    const grid1 = document.createElement('div');
-    grid1.className = 'sess-profile-grid';
-    [['Name', name], ['Company', company], ['Course', course], ['Experience', exp], ['CTC', ctc], ['Phone', phone]]
-      .filter(([,v]) => v)
-      .forEach(([l, v]) => {
-        const c = document.createElement('div');
-        c.className = 'sess-profile-cell';
-        c.innerHTML = '<div class="sess-cell-l">' + l + '</div><div class="sess-cell-v">' + v + '</div>';
-        grid1.appendChild(c);
+    // Lead Profile
+    var profileFields = [['Name',name],['Company',company],['Course',course],['Experience',exp],['CTC',ctc],['Phone',phone]].filter(function(f){return !!f[1];});
+    if (profileFields.length) {
+      body.appendChild(mkSecHead('Lead Profile'));
+      var pg = document.createElement('div');
+      pg.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);';
+      profileFields.forEach(function(f, i) {
+        var c = document.createElement('div');
+        c.style.cssText = 'padding:9px 12px;border-right:' + (i % 3 === 2 ? 'none' : '1px solid #e4e7ec') + ';border-bottom:1px solid #e4e7ec;';
+        c.innerHTML = '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#9aa0b2;margin-bottom:3px;">' + f[0] + '</div><div style="font-size:12px;font-weight:600;color:#0f1623;">' + e2(f[1]) + '</div>';
+        pg.appendChild(c);
       });
-    sec1.appendChild(grid1);
-    body.appendChild(sec1);
+      body.appendChild(pg);
+    }
 
-    // ── 2. CRM DATA + CALL NOTES ──
+    // CRM + Notes
     if (s.crm || s.notes) {
-      const sec2 = mkSection('CRM Data & Call Notes');
+      body.appendChild(mkSecHead('CRM Data & Call Notes'));
       if (s.crm) {
-        const box = document.createElement('div');
-        box.className = 'sess-raw-box';
-        box.textContent = s.crm;
-        sec2.appendChild(box);
+        var crmBox = document.createElement('div');
+        crmBox.style.cssText = 'padding:10px 14px;font-size:11px;font-family:monospace;color:#5c6479;line-height:1.7;background:#f8f9fb;border-bottom:1px solid #e4e7ec;white-space:pre-wrap;word-break:break-word;';
+        crmBox.textContent = s.crm;
+        body.appendChild(crmBox);
       }
       if (s.notes) {
-        const lbl = document.createElement('div');
-        lbl.className = 'sess-notes-label';
-        lbl.textContent = 'Call Notes';
-        const box2 = document.createElement('div');
-        box2.className = 'sess-raw-box';
-        box2.style.background = 'var(--s)';
-        box2.textContent = s.notes;
-        sec2.appendChild(lbl);
-        sec2.appendChild(box2);
+        var nl = document.createElement('div');
+        nl.style.cssText = 'padding:5px 14px 3px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#9aa0b2;background:#f8f9fb;';
+        nl.textContent = 'Call Notes';
+        body.appendChild(nl);
+        var nb = document.createElement('div');
+        nb.style.cssText = 'padding:8px 14px 10px;font-size:11px;color:#5c6479;line-height:1.7;background:#f8f9fb;border-bottom:1px solid #e4e7ec;white-space:pre-wrap;';
+        nb.textContent = s.notes;
+        body.appendChild(nb);
       }
-      body.appendChild(sec2);
     }
 
-    // ── 3. INTELLIGENCE ──
+    // Intelligence
     if (score || obj || optDay || hooks.length) {
-      const sec3 = mkSection('Lead Intelligence');
-      const ig = document.createElement('div');
-      ig.className = 'sess-intel-grid';
-      if (score) { const c = mkICell('Sentiment Score', score + '/10 — ' + (intel.sentiment_label || ''), ''); ig.appendChild(c); }
-      if (obj)   { const c = mkICell('Primary Blocker', obj, objSum); ig.appendChild(c); }
-      if (optDay){ const c = mkICell('Best Window', optDay + (optHour ? ' · ' + optHour : ''), optReas); ig.appendChild(c); }
-      if (ig.children.length) sec3.appendChild(ig);
-      if (hooks.length) {
-        const rl = document.createElement('div'); rl.className = 'sess-reb-label'; rl.textContent = 'Rebuttal Hooks';
-        sec3.appendChild(rl);
-        hooks.forEach(r => { const d = document.createElement('div'); d.className = 'sess-reb-item'; d.textContent = r; sec3.appendChild(d); });
-      }
-      body.appendChild(sec3);
+      body.appendChild(mkSecHead('Lead Intelligence'));
+      var ig = document.createElement('div');
+      ig.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid #e4e7ec;';
+      if (score) ig.appendChild(mkICell('Sentiment', score + '/10 — ' + (intel.sentiment_label||''), ''));
+      if (obj)   ig.appendChild(mkICell('Blocker', obj, objSum));
+      if (optDay) ig.appendChild(mkICell('Best Window', optDay + (optHour?' · '+optHour:''), optReas));
+      if (ig.children.length) body.appendChild(ig);
+      hooks.forEach(function(r) {
+        var rb = document.createElement('div');
+        rb.style.cssText = 'padding:8px 14px;font-size:12px;color:#0f1623;border-left:3px solid #c3d3f7;border-bottom:1px solid #e4e7ec;background:#f8f9fb;';
+        rb.textContent = r;
+        body.appendChild(rb);
+      });
     }
 
-    // ── 4. MESSAGES ──
+    // Messages
     if (msgs.length) {
-      const msgsHead = mkSection('Follow-up Messages — ' + (sent >= msgs.length ? 'All sent' : 'Next: Message ' + (sent + 1)));
-      // Copy all btn in section head
-      const secHead = msgsHead.querySelector('.sess-section-head');
-      const caBtn = document.createElement('button');
-      caBtn.className = 's-copy-all-btn';
+      var msecHead = mkSecHead('5 Follow-up Messages — ' + (nextIdx >= 0 ? 'Next: Message ' + (nextIdx+1) : 'All sent'));
+      // Copy all button in header
+      var caBtn = document.createElement('button');
+      caBtn.type = 'button';
       caBtn.textContent = 'Copy All';
-      caBtn.onclick = (e) => {
-        e.stopPropagation();
-        const header = name ? 'Lead: ' + name + '\n\n' : '';
-        const body2 = msgs.map((m, i) => {
-          const trg = trigs[i] ? ' [' + trigs[i] + ']' : '';
-          return '--- Message ' + (i+1) + ': ' + MSG_LABELS[i] + trg + ' ---\n' + m;
-        }).join('\n\n');
-        navigator.clipboard.writeText(header + body2).then(() => {
-          caBtn.textContent = 'Copied!';
-          setTimeout(() => caBtn.textContent = 'Copy All', 2000);
-          showToast('All messages copied', 'success');
-        }).catch(() => showToast('Copy failed', 'error'));
-      };
-      if (secHead) secHead.appendChild(caBtn);
+      caBtn.style.cssText = 'padding:3px 10px;border:1px solid #cdd1da;border-radius:5px;font-size:10px;font-weight:600;font-family:inherit;background:#f8f9fb;color:#5c6479;cursor:pointer;';
+      caBtn.addEventListener('click', (function(ss) { return function() {
+        var hdr = ss.lead && ss.lead.name ? 'Lead: ' + ss.lead.name + '\n\n' : '';
+        var bdy = (ss.messages||[]).map(function(m,i){return '--- Message '+(i+1)+': '+MSG_LABELS[i]+(ss.triggers&&ss.triggers[i]?' ['+ss.triggers[i]+']':'')+' ---\n'+m;}).join('\n\n');
+        navigator.clipboard.writeText(hdr+bdy).then(function(){showToast('All messages copied','success');});
+      }; })(s));
+      msecHead.appendChild(caBtn);
+      body.appendChild(msecHead);
 
-      msgs.forEach((m, i) => {
-        const trg    = trigs[i] || '';
-        const isSent = i < sent;
-        const isNext = i === nextMsg;
+      msgs.forEach(function(m, i) {
+        var trg    = trigs[i] || '';
+        var isSent = i < sent;
+        var isNext = i === nextIdx;
+        var rowBg  = isNext ? '#eff4ff' : isSent ? '#fafafa' : '#fff';
+        var numBg  = isSent ? '#0d7a45' : isNext ? '#1a56db' : '#0f1623';
 
-        const mc = document.createElement('div');
-        mc.className = 'sess-msg-card' + (isSent ? ' sess-msg-sent' : '') + (isNext ? ' sess-msg-next' : '');
+        var mc = document.createElement('div');
+        mc.style.cssText = 'border-bottom:1px solid #e4e7ec;' + (isSent?'opacity:0.55;':'');
 
-        const mh = document.createElement('div');
-        mh.className = 'sess-msg-head';
+        var mh = document.createElement('div');
+        mh.style.cssText = 'display:flex;align-items:center;gap:7px;padding:8px 12px;background:' + rowBg + ';flex-wrap:wrap;border-bottom:1px solid #e4e7ec;';
 
-        const mn = document.createElement('span');
-        mn.className = 'sess-msg-num' + (isSent ? ' sent' : isNext ? ' next' : '');
-        mn.textContent = isSent ? '✓' : i + 1;
-        mh.appendChild(mn);
+        var numEl = document.createElement('span');
+        numEl.style.cssText = 'width:20px;height:20px;background:' + numBg + ';color:#fff;border-radius:4px;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-family:monospace;';
+        numEl.textContent = isSent ? '✓' : (i + 1);
+        mh.appendChild(numEl);
 
-        const ml2 = document.createElement('span');
-        ml2.className = 'sess-msg-label';
-        ml2.textContent = 'Message ' + (i+1) + ' — ' + MSG_LABELS[i];
-        mh.appendChild(ml2);
+        var lblEl = document.createElement('span');
+        lblEl.style.cssText = 'font-size:11px;font-weight:600;color:#0f1623;flex:1;';
+        lblEl.textContent = 'Message ' + (i+1) + ' — ' + MSG_LABELS[i];
+        mh.appendChild(lblEl);
 
-        if (isNext) {
-          const np = document.createElement('span');
-          np.className = 'sess-next-badge';
-          np.textContent = 'Next to send';
-          mh.appendChild(np);
-        }
-        if (isSent) {
-          const sp = document.createElement('span');
-          sp.className = 'sess-sent-badge';
-          sp.textContent = 'Sent';
-          mh.appendChild(sp);
-        }
-        if (trg) {
-          const tb = document.createElement('span');
-          tb.className = 'sess-msg-trigger';
-          tb.textContent = trg;
-          mh.appendChild(tb);
-        }
+        if (isNext) mh.appendChild(mkBadge('Next to send', '#eff4ff', '#1a56db', '#c3d3f7'));
+        if (isSent) mh.appendChild(mkBadge('Sent', '#e6f5ec', '#0d7a45', '#a3d9b8'));
+        if (trg)    mh.appendChild(mkBadge(trg, '#f0ebff', '#5b21b6', '#c4b0f5'));
 
-        // Copy button
-        const cp = document.createElement('button');
-        cp.className = 's-copy-btn' + (isNext ? ' next-copy' : '');
-        cp.textContent = isNext ? 'Copy & Mark Sent' : 'Copy';
-        cp.onclick = (e) => {
-          e.stopPropagation();
-          navigator.clipboard.writeText(m).then(() => {
-            cp.textContent = 'Copied!';
-            cp.classList.add('copied');
-            if (isNext) {
-              markMessageSent(s.id);
-            }
-            setTimeout(() => { cp.textContent = isNext ? 'Copy & Mark Sent' : 'Copy'; cp.classList.remove('copied'); }, 2000);
-            showToast('Message ' + (i+1) + ' copied', 'success');
-          }).catch(() => showToast('Copy failed', 'error'));
-        };
-        mh.appendChild(cp);
+        var cpBtn = document.createElement('button');
+        cpBtn.type = 'button';
+        cpBtn.textContent = isNext ? 'Copy & Mark Sent' : 'Copy';
+        cpBtn.style.cssText = 'padding:5px 12px;border-radius:5px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;margin-left:auto;flex-shrink:0;' +
+          (isNext ? 'background:#1a56db;color:#fff;border:none;' : 'background:#f8f9fb;color:#5c6479;border:1px solid #cdd1da;');
+        cpBtn.addEventListener('click', (function(sid, midx, inext, btn) {
+          return function() {
+            var ss2 = getSessions();
+            var sr  = ss2.find(function(x){ return x.id === sid; });
+            if (!sr) return;
+            navigator.clipboard.writeText(sr.messages[midx] || '').then(function() {
+              showToast('Message ' + (midx+1) + ' copied', 'success');
+              if (inext) {
+                sr.sentCount = Math.min((sr.sentCount||0)+1, sr.messages.length);
+                localStorage.setItem(SESSIONS_KEY, JSON.stringify(ss2));
+                updateSessionsCount();
+                renderDrawer();
+                // Re-open the same lead
+                var items = document.querySelectorAll('#drawer-list > div');
+                var ss3 = getSessions();
+                var newIdx = ss3.findIndex(function(x){ return x.id === sid; });
+                if (newIdx !== -1 && items[newIdx]) {
+                  var btn2 = items[newIdx].querySelector('button');
+                  if (btn2) btn2.click();
+                }
+              } else {
+                btn.textContent = 'Copied!';
+                setTimeout(function(){ btn.textContent = 'Copy'; }, 2000);
+              }
+            }).catch(function(){ showToast('Copy failed','error'); });
+          };
+        })(s.id, i, isNext, cpBtn));
+        mh.appendChild(cpBtn);
         mc.appendChild(mh);
 
-        const mb = document.createElement('div');
-        mb.className = 'sess-msg-body';
+        var mb = document.createElement('div');
+        mb.style.cssText = 'padding:12px 14px;font-size:13px;line-height:1.8;color:#0f1623;white-space:pre-wrap;word-break:break-word;';
         mb.textContent = m;
         mc.appendChild(mb);
-        msgsHead.appendChild(mc);
+        body.appendChild(mc);
       });
-      body.appendChild(msgsHead);
     }
 
-    item.appendChild(body);
-    list.appendChild(item);
+    // Wire the toggle — simple addEventListener, no CSS classes
+    hBtn.addEventListener('click', function() {
+      var isOpen = body.style.display === 'block';
+      // Close all open bodies in drawer
+      var allBodies = list.querySelectorAll('div > div:last-child');
+      allBodies.forEach(function(b) {
+        if (b !== body) { b.style.display = 'none'; }
+      });
+      var allHdrs = list.querySelectorAll('div > button');
+      allHdrs.forEach(function(h) {
+        if (h !== hBtn) { h.style.background = '#f8f9fb'; }
+      });
+      // Toggle this
+      if (isOpen) {
+        body.style.display = 'none';
+        hBtn.style.background = '#f8f9fb';
+      } else {
+        body.style.display = 'block';
+        hBtn.style.background = '#e8edf5';
+        setTimeout(function() { wrap.scrollIntoView({behavior:'smooth',block:'nearest'}); }, 60);
+      }
+    });
+
+    wrap.appendChild(hBtn);
+    wrap.appendChild(body);
+    list.appendChild(wrap);
   });
 }
 
-function mkSection(title) {
-  const sec = document.createElement('div');
-  sec.className = 'sess-section';
-  const h = document.createElement('div');
-  h.className = 'sess-section-head';
-  h.textContent = title;
-  sec.appendChild(h);
-  return sec;
+function mkSecHead(title) {
+  var d = document.createElement('div');
+  d.style.cssText = 'padding:7px 14px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#9aa0b2;background:#f1f3f6;border-bottom:1px solid #e4e7ec;display:flex;align-items:center;justify-content:space-between;';
+  d.textContent = title;
+  return d;
 }
 
 function mkICell(label, val, sub) {
-  const c = document.createElement('div');
-  c.className = 'sess-intel-cell';
-  c.innerHTML = '<div class="sess-cell-l">' + label + '</div><div class="sess-cell-v">' + val + '</div>' + (sub ? '<div class="sess-cell-s">' + sub + '</div>' : '');
-  return c;
+  var d = document.createElement('div');
+  d.style.cssText = 'padding:9px 12px;border-right:1px solid #e4e7ec;';
+  d.innerHTML = '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#9aa0b2;margin-bottom:3px;">' + label + '</div>' +
+    '<div style="font-size:12px;font-weight:600;color:#0f1623;">' + e2(val) + '</div>' +
+    (sub ? '<div style="font-size:10px;color:#5c6479;margin-top:2px;line-height:1.4;">' + e2(sub) + '</div>' : '');
+  return d;
 }
 
-function toggleSession(headEl){
-  const item = headEl.closest('.session-item');
-  if (!item) return;
-  const isOpen = item.classList.contains('expanded');
-  document.querySelectorAll('.session-item.expanded').forEach(el => el.classList.remove('expanded'));
-  if (!isOpen) {
-    item.classList.add('expanded');
-    setTimeout(() => item.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
-  }
+function mkBadge(txt, bg, color, border) {
+  var s = document.createElement('span');
+  s.style.cssText = 'padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;background:' + bg + ';color:' + color + ';border:1px solid ' + border + ';white-space:nowrap;';
+  s.textContent = txt;
+  return s;
 }
 
-function copySessionMsg(e, sessionIdx, msgIdx){
-  e.stopPropagation();
-  const sessions = getSessions();
-  const text = sessions[sessionIdx]?.messages?.[msgIdx] || '';
-  const btn  = e.target;
-  navigator.clipboard.writeText(text).then(() => {
-    btn.textContent = 'Copied';
-    btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
-  }).catch(() => showToast('Copy failed', 'error'));
+function e2(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-function copyAllSession(e, sessionIdx){
-  e.stopPropagation();
-  const sessions = getSessions();
-  const s   = sessions[sessionIdx];
-  if (!s) return;
-  const lead = s.lead || {};
-  const header = lead.name ? `Lead: ${lead.name}\n\n` : '';
-  const body = (s.messages || []).map((m, i) => {
-    const trg = (s.triggers || [])[i] ? ` [${(s.triggers||[])[i]}]` : '';
-    return `--- Message ${i+1}: ${MSG_LABELS[i]}${trg} ---\n${m}`;
-  }).join('\n\n');
-  const btn = e.target;
-  navigator.clipboard.writeText(header + body).then(() => {
-    btn.textContent = 'All Copied';
-    setTimeout(() => btn.textContent = 'Copy All 5 Messages', 2200);
-    showToast('All messages copied', 'success');
-  }).catch(() => showToast('Copy failed', 'error'));
-}
 
 let _tt;function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast show${type?' '+type:''}`;clearTimeout(_tt);_tt=setTimeout(()=>t.className='toast',3000);}
 </script>
